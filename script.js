@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // --- Pass 2: Temperature State Changes ---
+        // --- Pass 2: Temperature State Changes and Special Source Effects ---
         applyTemperatureEffects(nextGrid);
 
         // --- Pass 3: Life and Decay ---
@@ -110,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Pass 5: Physics (Gravity, Gas/Liquid movement) ---
         applyPhysics(nextGrid);
-
 
         grid = nextGrid;
         requestAnimationFrame(update);
@@ -125,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cell = grid[y][x];
                 const element = elements[cell.symbol];
 
-                if (element.is_life) {
+                if (element && element.is_life) {
                     // Spread to neighbors
                     if (Math.random() < 0.1) {
                         const dx = Math.floor(Math.random() * 3) - 1;
@@ -152,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Handles temperature-based state changes.
+     * Handles temperature-based state changes and HEAT/COLD source effects.
      */
     function applyTemperatureEffects(nextGrid) {
         for (let y = 0; y < GRID_SIZE; y++) {
@@ -160,6 +159,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cell = nextGrid[y][x];
                 const element = elements[cell.symbol];
 
+                // HEAT/COLD cells act as sources, persistently setting temperature
+                if (cell.symbol === 'HEAT' || cell.symbol === 'COLD') {
+                    nextGrid[y][x].temperature = element.temperature;
+                    continue;
+                }
+
+                // If cell is not source but overlaps a source in the original grid, adjust its temp toward the source
+                const orig = grid[y][x];
+                if (orig.symbol === 'HEAT' || orig.symbol === 'COLD') {
+                    nextGrid[y][x].temperature += (elements[orig.symbol].temperature - cell.temperature) * 0.5;
+                }
+
+                // Phase changes for water
                 if (element.symbol === 'H2O' && cell.temperature < 0) {
                     nextGrid[y][x].symbol = 'ICE';
                 } else if (element.symbol === 'ICE' && cell.temperature > 0) {
@@ -181,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let x = 0; x < GRID_SIZE; x++) {
                 const currentCell = nextGrid[y][x];
                 const currentElement = elements[currentCell.symbol];
-                if (currentElement.symbol === 'VACUUM') continue;
+                if (!currentElement || currentElement.symbol === 'VACUUM') continue;
 
                 const density = currentElement.density_proxy || 1.0;
                 const phase = currentElement.phase_at_stp;
@@ -198,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (y < GRID_SIZE - 1) {
                         const belowCell = nextGrid[y + 1][x];
                         const belowElement = elements[belowCell.symbol];
-                        if (belowElement.phase_at_stp !== 'Solid' && density > belowElement.density_proxy) {
+                        if (belowElement && belowElement.phase_at_stp !== 'Solid' && density > belowElement.density_proxy) {
                             swap(x, y, x, y + 1);
                         }
                     }
@@ -207,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (y < GRID_SIZE - 1) {
                         const belowCell = nextGrid[y + 1][x];
                         const belowElement = elements[belowCell.symbol];
-                        if (density > belowElement.density_proxy) {
+                        if (belowElement && density > belowElement.density_proxy) {
                             swap(x, y, x, y + 1);
                             continue;
                         }
@@ -217,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (x + dir >= 0 && x + dir < GRID_SIZE) {
                          const sideCell = nextGrid[y][x+dir];
                          const sideElement = elements[sideCell.symbol];
-                         if (sideElement.phase_at_stp !== 'Solid' && sideElement.phase_at_stp !== 'Liquid') {
+                         if (sideElement && sideElement.phase_at_stp !== 'Solid' && sideElement.phase_at_stp !== 'Liquid') {
                              swap(x,y, x+dir, y);
                              continue;
                          }
@@ -228,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (y > 0) {
                         const aboveCell = nextGrid[y - 1][x];
                         const aboveElement = elements[aboveCell.symbol];
-                        if (density < aboveElement.density_proxy) {
+                        if (aboveElement && density < aboveElement.density_proxy) {
                             swap(x, y, x, y - 1);
                             continue;
                         }
@@ -238,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (x + dir >= 0 && x + dir < GRID_SIZE) {
                         const sideCell = nextGrid[y][x + dir];
                         const sideElement = elements[sideCell.symbol];
-                        if (sideElement.phase_at_stp === 'Gas' && density > sideElement.density_proxy) {
+                        if (sideElement && sideElement.phase_at_stp === 'Gas' && density > sideElement.density_proxy) {
                             swap(x, y, x + dir, y);
                             continue;
                         }
@@ -307,7 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     /**
      * Renders the grid to the canvas, with cell color based on temperature.
      */
@@ -330,14 +341,14 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(render);
     }
     
-    /** Populates the dropdown with elements */
+    /** Populates the dropdown with pure periodic table elements only */
     function populateElementSelector() {
-        // A list of symbols that should not appear in the element selector dropdown.
-        const nonSelectableSymbols = ['FIRE', 'VACUUM', 'H2O', 'NACL', 'CH4', 'ICE', 'STEAM', 'LIFE', 'DEAD'];
-
+        elementSelector.innerHTML = '';
         Object.keys(elements)
-            .filter(symbol => !nonSelectableSymbols.includes(symbol))
-            .sort((a, b) => (elements[a].atomic_number ?? 1000) - (elements[b].atomic_number ?? 1000))
+            .filter(symbol =>
+                elements[symbol].atomic_number !== undefined
+            )
+            .sort((a, b) => elements[a].atomic_number - elements[b].atomic_number)
             .forEach(symbol => {
                 const option = document.createElement('option');
                 option.value = symbol;
