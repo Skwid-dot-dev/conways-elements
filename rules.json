@@ -25,5 +25,33 @@
         "enabled": true,
         "is_combustion": true,
         "probability": 0.1
+    },
+    {
+        "name": "CO2 Formation (C + O)",
+        "enabled": true,
+        "reactants": { "center": "C", "neighbors": ["O"] },
+        "products": { "center": "CO2", "consumed_neighbors": 1 },
+        "probability": 0.5
+    },
+    {
+        "name": "SO2 Formation (S + O)",
+        "enabled": true,
+        "reactants": { "center": "S", "neighbors": ["O"] },
+        "products": { "center": "SO2", "consumed_neighbors": 1 },
+        "probability": 0.5
+    },
+    {
+        "name": "Photosynthesis (CO2 + H2O)",
+        "enabled": true,
+        "reactants": { "center": "CO2", "neighbors": ["H2O"] },
+        "products": { "center": "LIFE", "consumed_neighbors": 1 },
+        "probability": 0.1
+    },
+    {
+        "name": "Acid Rain (SO2 + H2O)",
+        "enabled": true,
+        "reactants": { "center": "SO2", "neighbors": ["H2O"] },
+        "products": { "center": "H2SO4", "consumed_neighbors": 1 },
+        "probability": 0.2
     }
 ]

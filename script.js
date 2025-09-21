@@ -33,19 +33,16 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function loadData() {
         try {
-            const [elementsResponse, rulesResponse] = await Promise.all([
+            const [elementsResponse, compoundsResponse, rulesResponse] = await Promise.all([
                 fetch('elements.json'),
+                fetch('compounds.json'),
                 fetch('rules.json')
             ]);
-            elements = await elementsResponse.json();
+            const elementsData = await elementsResponse.json();
+            const compoundsData = await compoundsResponse.json();
             rules = await rulesResponse.json();
 
-            // Define special runtime elements
-            elements['VACUUM'] = { symbol: 'VACUUM', name: 'Vacuum', color: '#000000', phase_at_stp: 'Gas', temperature: -273 };
-            elements['FIRE'] = { symbol: 'FIRE', name: 'Fire', color: '#FF4500', phase_at_stp: 'Gas', lifespan: 15, temperature: 800 };
-            elements['H2O'] = { symbol: 'H2O', name: 'Water', color: '#3498DB', phase_at_stp: 'Liquid', temperature: 25 };
-            elements['NACL'] = { symbol: 'NACL', name: 'Salt', color: '#FDFEFE', phase_at_stp: 'Solid', temperature: 25 };
-            elements['CH4'] = { symbol: 'CH4', name: 'Methane', color: '#B2FF66', phase_at_stp: 'Gas', flammability: true, temperature: 25 };
+            elements = { ...elementsData, ...compoundsData };
 
             populateElementSelector();
             populateRuleset();
@@ -102,19 +99,155 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // --- Pass 2: Chemistry (Rules Engine) ---
+        // --- Pass 2: Temperature State Changes ---
+        applyTemperatureEffects(nextGrid);
+
+        // --- Pass 3: Life and Decay ---
+        applyLifeAndDecay(nextGrid);
+
+        // --- Pass 4: Chemistry (Rules Engine) ---
         applyRules(nextGrid);
 
-        // --- Pass 3: Physics (Gravity, Gas/Liquid movement) ---
-        // Your existing physics simulation logic from the repo goes here.
-        // For brevity, I am omitting the large physics block, but you should copy it here.
-        // Make sure to use `nextGrid` for reads and writes, then assign `grid = nextGrid` at the end.
+        // --- Pass 5: Physics (Gravity, Gas/Liquid movement) ---
+        applyPhysics(nextGrid);
 
 
         grid = nextGrid;
         requestAnimationFrame(update);
     }
     
+    /**
+     * Handles the spread of life and decay.
+     */
+    function applyLifeAndDecay(nextGrid) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const cell = grid[y][x];
+                const element = elements[cell.symbol];
+
+                if (element.is_life) {
+                    // Spread to neighbors
+                    if (Math.random() < 0.1) {
+                        const dx = Math.floor(Math.random() * 3) - 1;
+                        const dy = Math.floor(Math.random() * 3) - 1;
+                        if (dx === 0 && dy === 0) continue;
+                        const nx = x + dx;
+                        const ny = y + dy;
+                        if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && nextGrid[ny][nx].symbol === 'VACUUM') {
+                            nextGrid[ny][nx].symbol = 'LIFE';
+                            nextGrid[ny][nx].lifespan = element.lifespan;
+                        }
+                    }
+
+                    // Decay
+                    let newLifespan = (cell.lifespan || element.lifespan) - 1;
+                    if (newLifespan <= 0) {
+                        nextGrid[y][x].symbol = 'DEAD';
+                    } else {
+                        nextGrid[y][x].lifespan = newLifespan;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles temperature-based state changes.
+     */
+    function applyTemperatureEffects(nextGrid) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const cell = nextGrid[y][x];
+                const element = elements[cell.symbol];
+
+                if (element.symbol === 'H2O' && cell.temperature < 0) {
+                    nextGrid[y][x].symbol = 'ICE';
+                } else if (element.symbol === 'ICE' && cell.temperature > 0) {
+                    nextGrid[y][x].symbol = 'H2O';
+                } else if (element.symbol === 'H2O' && cell.temperature > 100) {
+                    nextGrid[y][x].symbol = 'STEAM';
+                } else if (element.symbol === 'STEAM' && cell.temperature < 100) {
+                    nextGrid[y][x].symbol = 'H2O';
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles the physics simulation for particle movement.
+     */
+    function applyPhysics(nextGrid) {
+        for (let y = GRID_SIZE - 1; y >= 0; y--) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const currentCell = nextGrid[y][x];
+                const currentElement = elements[currentCell.symbol];
+                if (currentElement.symbol === 'VACUUM') continue;
+
+                const density = currentElement.density_proxy || 1.0;
+                const phase = currentElement.phase_at_stp;
+
+                // Helper to swap cells
+                const swap = (x1, y1, x2, y2) => {
+                    const temp = nextGrid[y1][x1];
+                    nextGrid[y1][x1] = nextGrid[y2][x2];
+                    nextGrid[y2][x2] = temp;
+                };
+
+                if (phase === 'Solid') {
+                    // Solids fall down
+                    if (y < GRID_SIZE - 1) {
+                        const belowCell = nextGrid[y + 1][x];
+                        const belowElement = elements[belowCell.symbol];
+                        if (belowElement.phase_at_stp !== 'Solid' && density > belowElement.density_proxy) {
+                            swap(x, y, x, y + 1);
+                        }
+                    }
+                } else if (phase === 'Liquid') {
+                    // Liquids fall and spread
+                    if (y < GRID_SIZE - 1) {
+                        const belowCell = nextGrid[y + 1][x];
+                        const belowElement = elements[belowCell.symbol];
+                        if (density > belowElement.density_proxy) {
+                            swap(x, y, x, y + 1);
+                            continue;
+                        }
+                    }
+                    // Spread to the sides
+                    const dir = Math.random() < 0.5 ? 1 : -1;
+                    if (x + dir >= 0 && x + dir < GRID_SIZE) {
+                         const sideCell = nextGrid[y][x+dir];
+                         const sideElement = elements[sideCell.symbol];
+                         if (sideElement.phase_at_stp !== 'Solid' && sideElement.phase_at_stp !== 'Liquid') {
+                             swap(x,y, x+dir, y);
+                             continue;
+                         }
+                    }
+
+                } else if (phase === 'Gas') {
+                    // Gases rise and spread
+                    if (y > 0) {
+                        const aboveCell = nextGrid[y - 1][x];
+                        const aboveElement = elements[aboveCell.symbol];
+                        if (density < aboveElement.density_proxy) {
+                            swap(x, y, x, y - 1);
+                            continue;
+                        }
+                    }
+                     // Spread to the sides
+                    const dir = Math.random() < 0.5 ? 1 : -1;
+                    if (x + dir >= 0 && x + dir < GRID_SIZE) {
+                        const sideCell = nextGrid[y][x + dir];
+                        const sideElement = elements[sideCell.symbol];
+                        if (sideElement.phase_at_stp === 'Gas' && density > sideElement.density_proxy) {
+                            swap(x, y, x + dir, y);
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Applies the enabled rules from rules.json to the grid.
      */
@@ -199,8 +332,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     /** Populates the dropdown with elements */
     function populateElementSelector() {
+        // A list of symbols that should not appear in the element selector dropdown.
+        const nonSelectableSymbols = ['FIRE', 'VACUUM', 'H2O', 'NACL', 'CH4', 'ICE', 'STEAM', 'LIFE', 'DEAD'];
+
         Object.keys(elements)
-            .filter(s => !['FIRE', 'VACUUM', 'H2O', 'NACL', 'CH4'].includes(s))
+            .filter(symbol => !nonSelectableSymbols.includes(symbol))
             .sort((a, b) => (elements[a].atomic_number ?? 1000) - (elements[b].atomic_number ?? 1000))
             .forEach(symbol => {
                 const option = document.createElement('option');
