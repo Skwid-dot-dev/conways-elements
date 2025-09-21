@@ -27,6 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Core Functions ---
 
+    /**
+     * Fetches element data from the JSON file and initializes special elements.
+     */
+
     async function loadElements() {
         try {
             const response = await fetch('elements.json');
@@ -43,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error loading elements.json:", error);
         }
     }
+
 
     function initializeGrid() {
         grid = Array(GRID_SIZE).fill(null).map(() =>
@@ -196,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-
+      
         for (let y = 1; y < GRID_SIZE; y++) {
             for (let x = 0; x < GRID_SIZE; x++) {
                 const element = elements[grid[y][x].symbol];
@@ -213,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cell = grid[y][x];
                 const element = elements[cell.symbol];
                 if (!element || (element.phase_at_stp !== 'Liquid' && element.phase_at_stp !== 'Gas') || cell.symbol === 'VACUUM') continue;
+
                 const dir = Math.random() < 0.5 ? 1 : -1;
                 const checkX = x + dir;
                 if (checkX >= 0 && checkX < GRID_SIZE && !processed[y][checkX]) {
@@ -229,6 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(update);
     }
 
+    /**
+     * Renders the current state of the grid to the canvas.
+     * Called on every animation frame to ensure a smooth display.
+     */
     function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (let y = 0; y < GRID_SIZE; y++) {
@@ -253,6 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = symbol;
             elementSelector.appendChild(option);
         });
+
         elementSelector.value = currentElement;
     }
 
@@ -298,6 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.addEventListener('mouseleave', () => isMouseDown = false);
         canvas.addEventListener('mousemove', (e) => { if (isMouseDown) paint(e); });
         render();
+
     }
 
     init();
