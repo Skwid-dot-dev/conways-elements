@@ -1,0 +1,29 @@
+[
+    {
+        "name": "Water Formation (O + 2H)",
+        "enabled": true,
+        "reactants": { "center": "O", "neighbors": ["H", "H"] },
+        "products": { "center": "H2O", "consumed_neighbors": 2 },
+        "probability": 1.0
+    },
+    {
+        "name": "Salt Formation (Na + Cl)",
+        "enabled": true,
+        "reactants": { "center": "NA", "neighbors": ["CL"] },
+        "products": { "center": "NACL", "consumed_neighbors": 1 },
+        "probability": 0.2
+    },
+    {
+        "name": "Methane Formation (C + 4H)",
+        "enabled": true,
+        "reactants": { "center": "C", "neighbors": ["H", "H", "H", "H"] },
+        "products": { "center": "CH4", "consumed_neighbors": 4 },
+        "probability": 0.05
+    },
+    {
+        "name": "Combustion (Flammable + O)",
+        "enabled": true,
+        "is_combustion": true,
+        "probability": 0.1
+    }
+]
