@@ -9,7 +9,7 @@
     {
         "name": "Salt Formation (Na + Cl)",
         "enabled": true,
-        "reactants": { "center": "NA", "neighbors": ["CL"] },
+        "reactants": { "center": "Na", "neighbors": ["Cl"] },
         "products": { "center": "NACL", "consumed_neighbors": 1 },
         "probability": 0.2
     },
@@ -53,5 +53,61 @@
         "reactants": { "center": "SO2", "neighbors": ["H2O"] },
         "products": { "center": "H2SO4", "consumed_neighbors": 1 },
         "probability": 0.2
+    },
+    {
+        "name": "Salt Dissolution (NACL + H2O)",
+        "enabled": true,
+        "reactants": { "center": "NACL", "neighbors": ["H2O"] },
+        "products": { "center": "H2O", "consumed_neighbors": 1 },
+        "probability": 0.4
+    },
+    {
+        "name": "Neutralization (H2SO4 + Na)",
+        "enabled": true,
+        "reactants": { "center": "H2SO4", "neighbors": ["Na"] },
+        "products": { "center": "NACL", "consumed_neighbors": 1 },
+        "probability": 0.2
+    },
+    {
+        "name": "Rusting (Fe + O)",
+        "enabled": true,
+        "reactants": { "center": "Fe", "neighbors": ["O"] },
+        "products": { "center": "DEAD", "consumed_neighbors": 1 },
+        "probability": 0.05
+    },
+    {
+        "name": "Life Decay (LIFE)",
+        "enabled": true,
+        "reactants": { "center": "LIFE", "neighbors": [] },
+        "products": { "center": "DEAD", "consumed_neighbors": 0 },
+        "probability": 0.005
+    },
+    {
+        "name": "Dead Matter Decomposition (DEAD + O)",
+        "enabled": true,
+        "reactants": { "center": "DEAD", "neighbors": ["O"] },
+        "products": { "center": "CO2", "consumed_neighbors": 1 },
+        "probability": 0.01
+    },
+    {
+        "name": "Steam Condensation (STEAM + COLD)",
+        "enabled": true,
+        "reactants": { "center": "STEAM", "neighbors": ["COLD"] },
+        "products": { "center": "H2O", "consumed_neighbors": 1 },
+        "probability": 1.0
+    },
+    {
+        "name": "Ice Melting (ICE + HEAT)",
+        "enabled": true,
+        "reactants": { "center": "ICE", "neighbors": ["HEAT"] },
+        "products": { "center": "H2O", "consumed_neighbors": 1 },
+        "probability": 1.0
+    },
+    {
+        "name": "Water Freezing (H2O + COLD)",
+        "enabled": true,
+        "reactants": { "center": "H2O", "neighbors": ["COLD"] },
+        "products": { "center": "ICE", "consumed_neighbors": 1 },
+        "probability": 1.0
     }
 ]
