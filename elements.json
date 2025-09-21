@@ -374,7 +374,8 @@
         "flammability": false,
         "solubility": false,
         "density_proxy": 8.96,
-        "color": "#C88033"
+        "color": "#C88033",
+        "conductive": true
     },
     "Zn": {
         "symbol": "Zn",
