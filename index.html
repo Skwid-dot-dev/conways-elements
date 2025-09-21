@@ -3,22 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cellular Automata Simulator</title>
+    <title>Conway's Elements</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Cellular Automata Simulator</h1>
-    <div id="controls">
-        <label for="elementSelector">Element:</label>
-        <select id="elementSelector"></select>
-
-        <label for="brushSize">Brush Size:</label>
-        <input type="range" id="brushSize" min="1" max="10" value="1">
-
-        <button id="startPauseBtn">Start</button>
-        <button id="clearBtn">Clear</button>
+    <div class="container">
+        <div class="simulation-area">
+            <canvas id="simulationCanvas"></canvas>
+        </div>
+        <div class="controls-panel">
+            <h2>Controls</h2>
+            <div class="control-group">
+                <label for="elementSelector">Element:</label>
+                <select id="elementSelector"></select>
+            </div>
+            <div class="control-group">
+                <label for="brushSize">Brush Size: <span id="brushSizeValue">1</span></label>
+                <input type="range" id="brushSize" min="1" max="20" value="1">
+            </div>
+            <div class="control-group button-group">
+                <button id="startPauseBtn">Start</button>
+                <button id="clearBtn">Clear</button>
+            </div>
+            <div id="infoPanel" class="info-box">
+                <h3>Element Information</h3>
+                <p>Hover over the grid to see details.</p>
+            </div>
+            <div id="ruleset" class="info-box">
+                <h3>Interaction Rules</h3>
+                <!-- Rules will be dynamically populated here -->
+            </div>
+        </div>
     </div>
-    <canvas id="simulationCanvas"></canvas>
+
+    <!-- D3.js for color interpolation -->
+    <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
