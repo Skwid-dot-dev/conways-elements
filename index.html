@@ -47,10 +47,23 @@
                 <!-- Rules will be dynamically populated here -->
             </div>
             <div class="control-group">
+                <h3>Global Controls</h3>
+                <label for="vacuumTempSlider">Vacuum Temp: <span id="vacuumTempValue">-273</span>°C</label>
+                <input type="range" id="vacuumTempSlider" min="-273" max="500" value="-273">
+            </div>
+            <div class="control-group">
                 <h3>Feature Toggles</h3>
                 <div class="toggle-switch">
                     <input type="checkbox" id="gravityToggle" checked>
-                    <label for="gravityToggle">Mass-Based Gravity</label>
+                    <label for="gravityToggle">Object vs. Particle Gravity</label>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="atmospheresToggle" checked>
+                    <label for="atmospheresToggle">Atmospheres</label>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="coresToggle" checked>
+                    <label for="coresToggle">Cores</label>
                 </div>
             </div>
         </div>
