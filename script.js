@@ -72,6 +72,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Handles temperature-based ionization of Hydrogen.
+     */
+    function applyIonization(nextGrid) {
+        const IONIZATION_TEMP = 15000; // Temperature in Celsius for ionization
+        const IONIZATION_PROBABILITY = 0.5;
+
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const cell = grid[y][x];
+                if (cell.symbol === 'H' && cell.temperature > IONIZATION_TEMP) {
+                    if (Math.random() < IONIZATION_PROBABILITY) {
+                        // Find an empty neighbor cell for the electron
+                        const neighbors = [];
+                        for (let dy = -1; dy <= 1; dy++) {
+                            for (let dx = -1; dx <= 1; dx++) {
+                                if (dx === 0 && dy === 0) continue;
+                                const nx = x + dx;
+                                const ny = y + dy;
+                                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && nextGrid[ny][nx].symbol === 'VACUUM') {
+                                    neighbors.push({x: nx, y: ny});
+                                }
+                            }
+                        }
+
+                        if (neighbors.length > 0) {
+                            const electronCell = neighbors[Math.floor(Math.random() * neighbors.length)];
+
+                            // Ionize: H -> H+
+                            nextGrid[y][x].symbol = 'Hplus';
+
+                            // Create electron
+                            nextGrid[electronCell.y][electronCell.x].symbol = 'eminus';
+                            nextGrid[electronCell.y][electronCell.x].temperature = cell.temperature; // Electron inherits temperature
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Loads element and rule data from the pre-loaded JavaScript data files.
      */
     function loadData() {
@@ -186,16 +227,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Pass 2: Temperature State Changes and Special Source Effects ---
         applyTemperatureEffects(nextGrid);
 
-        // --- Pass 3: Life and Decay ---
+        // --- Pass 3: Ionization ---
+        applyIonization(nextGrid);
+
+        // --- Pass 4: Life and Decay ---
         applyLifeAndDecay(nextGrid);
 
-        // --- Pass 4: Magnetism ---
+        // --- Pass 5: Magnetism ---
         applyMagnetism(nextGrid);
 
-        // --- Pass 5: Chemistry (Rules Engine) ---
+        // --- Pass 6: Chemistry (Rules Engine) ---
         applyRules(nextGrid);
 
-        // --- Pass 6: Physics (Gravity, Gas/Liquid movement) ---
+        // --- Pass 7: Physics (Gravity, Gas/Liquid movement) ---
         applyPhysics(nextGrid);
 
         grid = nextGrid;
