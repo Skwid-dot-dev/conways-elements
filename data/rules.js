@@ -122,5 +122,12 @@ const RULES_DATA = [
         "enabled": true,
         "is_magnetism": true,
         "probability": 0.5
+    },
+    {
+        "name": "Hydrogen Recombination (H+ + e-)",
+        "enabled": true,
+        "reactants": { "center": "Hplus", "neighbors": ["eminus"] },
+        "products": { "center": "H", "consumed_neighbors": 1 },
+        "probability": 0.8
     }
 ];

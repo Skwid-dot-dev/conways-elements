@@ -146,5 +146,23 @@ const COMPOUNDS_DATA = {
         "is_sun": true,
         "heat_range": 50,
         "heat_intensity": 100
+    },
+    "Hplus": {
+        "symbol": "Hplus",
+        "name": "Hydrogen Ion (Proton)",
+        "color": "#FF4500",
+        "phase_at_stp": "Gas",
+        "temperature": 25,
+        "density_proxy": 0.0001,
+        "is_plasma": true
+    },
+    "eminus": {
+        "symbol": "eminus",
+        "name": "Electron",
+        "color": "#00BFFF",
+        "phase_at_stp": "Gas",
+        "temperature": 25,
+        "density_proxy": 0.00001,
+        "is_plasma": true
     }
 };
