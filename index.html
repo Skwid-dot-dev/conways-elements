@@ -13,32 +13,71 @@
         </div>
         <div class="controls-panel">
             <h2>Controls</h2>
-            <div class="control-group">
-                <label for="elementSelector">Element:</label>
-                <select id="elementSelector"></select>
-            </div>
-            <div class="control-group">
-                <label for="brushSize">Brush Size: <span id="brushSizeValue">1</span></label>
-                <input type="range" id="brushSize" min="1" max="20" value="1">
-            </div>
-            <div class="control-group button-group">
-                <button id="startPauseBtn">Start</button>
-                <button id="clearBtn">Clear</button>
-                <button id="createPlanetBtn">Create Planet</button>
-                <button id="returnToSpaceBtn">Return to Space</button>
-            </div>
-            <div class="control-group">
-                <label for="zoomSlider">Zoom: <span id="zoomValue">1</span>x</label>
-                <input type="range" id="zoomSlider" min="0.5" max="4" value="1" step="0.1">
-            </div>
-            <div class="control-group">
-                <label for="panXSlider">Pan X: <span id="panXValue">0</span></label>
-                <input type="range" id="panXSlider" min="-100" max="100" value="0">
-            </div>
-            <div class="control-group">
-                <label for="panYSlider">Pan Y: <span id="panYValue">0</span></label>
-                <input type="range" id="panYSlider" min="-100" max="100" value="0">
-            </div>
+
+            <fieldset>
+                <legend>Simulation</legend>
+                <div class="control-group button-group">
+                    <button id="startPauseBtn" title="Start or pause the simulation">Start</button>
+                    <button id="clearBtn" title="Clear the simulation world">Clear</button>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Brush</legend>
+                <div class="control-group">
+                    <label for="elementSelector">Element:</label>
+                    <select id="elementSelector" title="Select the element to paint"></select>
+                </div>
+                <div class="control-group">
+                    <label for="brushSize">Brush Size: <span id="brushSizeValue">1</span></label>
+                    <input type="range" id="brushSize" min="1" max="20" value="1" title="Adjust the size of the painting brush">
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>View</legend>
+                <div class="control-group">
+                    <label for="zoomSlider">Zoom: <span id="zoomValue">1</span>x</label>
+                    <input type="range" id="zoomSlider" min="0.5" max="4" value="1" step="0.1" title="Zoom in or out">
+                </div>
+                <div class="control-group">
+                    <label for="panXSlider">Pan X: <span id="panXValue">0</span></label>
+                    <input type="range" id="panXSlider" min="-100" max="100" value="0" title="Pan the view horizontally">
+                </div>
+                <div class="control-group">
+                    <label for="panYSlider">Pan Y: <span id="panYValue">0</span></label>
+                    <input type="range" id="panYSlider" min="-100" max="100" value="0" title="Pan the view vertically">
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Celestial Bodies</legend>
+                <div class="control-group button-group">
+                    <button id="createPlanetBtn" title="Create a new planet">Create Planet</button>
+                    <button id="returnToSpaceBtn" title="Return to the main space view">Return to Space</button>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Global Settings</legend>
+                <div class="control-group">
+                    <label for="vacuumTempSlider">Vacuum Temp: <span id="vacuumTempValue">-273</span>°C</label>
+                    <input type="range" id="vacuumTempSlider" min="-273" max="500" value="-273" title="Set the temperature of the vacuum">
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="gravityToggle" checked>
+                    <label for="gravityToggle" title="Toggle between mass-based gravity for celestial bodies and simple particle gravity">Object vs. Particle Gravity</label>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="atmospheresToggle" checked>
+                    <label for="atmospheresToggle" title="Toggle atmospheres around celestial bodies">Atmospheres</label>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="coresToggle" checked>
+                    <label for="coresToggle" title="Toggle cores for celestial bodies">Cores</label>
+                </div>
+            </fieldset>
+
             <div id="infoPanel" class="info-box">
                 <h3>Element Information</h3>
                 <p>Hover over the grid to see details.</p>
@@ -47,36 +86,15 @@
                 <h3>Interaction Rules</h3>
                 <!-- Rules will be dynamically populated here -->
             </div>
-            <div class="control-group">
-                <h3>Global Controls</h3>
-                <label for="vacuumTempSlider">Vacuum Temp: <span id="vacuumTempValue">-273</span>°C</label>
-                <input type="range" id="vacuumTempSlider" min="-273" max="500" value="-273">
-            </div>
-            <div class="control-group">
-                <h3>Feature Toggles</h3>
-                <div class="toggle-switch">
-                    <input type="checkbox" id="gravityToggle" checked>
-                    <label for="gravityToggle">Object vs. Particle Gravity</label>
-                </div>
-                <div class="toggle-switch">
-                    <input type="checkbox" id="atmospheresToggle" checked>
-                    <label for="atmospheresToggle">Atmospheres</label>
-                </div>
-                <div class="toggle-switch">
-                    <input type="checkbox" id="coresToggle" checked>
-                    <label for="coresToggle">Cores</label>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- Element Data -->
-    <script src="data/elements.js"></script>
-    <script src="data/compounds.js"></script>
-    <script src="data/rules.js"></script>
-
     <!-- Main Simulation Script -->
-    <script src="script.js"></script>
+    <script type="module" src="js/api.js"></script>
+    <script type="module">
+        import { init } from './js/simulation.js';
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 
     <!-- Planet Creation Modal -->
     <div id="planetModal" class="modal">

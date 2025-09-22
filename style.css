@@ -158,6 +158,25 @@ select, input[type="range"] {
     margin-bottom: 8px;
 }
 
+.rule-description {
+    font-size: 0.8em;
+    color: #bdc3c7;
+    margin-left: 5px;
+}
+
+fieldset {
+    border: 1px solid #7f8c8d;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+legend {
+    padding: 0 5px;
+    color: #ecf0f1;
+    font-weight: bold;
+}
+
 .toggle-switch {
     display: flex;
     align-items: center;
