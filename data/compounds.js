@@ -118,5 +118,33 @@ const COMPOUNDS_DATA = {
         "flammability": true,
         "temperature": 25,
         "density_proxy": 0.657
+    },
+    "OIL": {
+        "symbol": "OIL",
+        "name": "Oil",
+        "color": "#333333",
+        "phase_at_stp": "Liquid",
+        "flammability": true,
+        "temperature": 25,
+        "density_proxy": 0.9
+    },
+    "LAVA": {
+        "symbol": "LAVA",
+        "name": "Lava",
+        "color": "#CF1020",
+        "phase_at_stp": "Liquid",
+        "temperature": 1200,
+        "density_proxy": 2.5
+    },
+    "SUN": {
+        "symbol": "SUN",
+        "name": "Sun",
+        "color": "#FFD700",
+        "phase_at_stp": "Solid",
+        "temperature": 5500,
+        "density_proxy": 100,
+        "is_sun": true,
+        "heat_range": 50,
+        "heat_intensity": 100
     }
 };

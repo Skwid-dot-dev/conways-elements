@@ -123,6 +123,16 @@ document.addEventListener('DOMContentLoaded', () => {
         let nextGrid = grid.map(row => row.map(cell => ({ ...cell })));
 
         // --- Pass 1: Temperature Diffusion ---
+        const suns = [];
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const cell = grid[y][x];
+                if (elements[cell.symbol] && elements[cell.symbol].is_sun) {
+                    suns.push({x, y, element: elements[cell.symbol]});
+                }
+            }
+        }
+
         for (let y = 0; y < GRID_SIZE; y++) {
             for (let x = 0; x < GRID_SIZE; x++) {
                 const cell = grid[y][x];
@@ -131,13 +141,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!element) continue;
 
                 // Static temperature for sources
-                if (element.symbol === 'HEAT' || element.symbol === 'COLD') {
+                if (element.symbol === 'HEAT' || element.symbol === 'COLD' || element.is_sun) {
                     nextGrid[y][x].temperature = element.temperature;
                     continue;
                 }
 
+                // Gradient heat from suns
+                if (suns.length > 0) {
+                    let minDistance = Infinity;
+                    let nearestSun = null;
+                    for (const sun of suns) {
+                        const distance = Math.sqrt(Math.pow(x - sun.x, 2) + Math.pow(y - sun.y, 2));
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            nearestSun = sun;
+                        }
+                    }
+                    if (nearestSun && minDistance < nearestSun.element.heat_range) {
+                        const heatFromSun = (nearestSun.element.heat_range - minDistance) / nearestSun.element.heat_range * nearestSun.element.heat_intensity;
+                        // Influence temperature towards sun's temp, don't just add
+                        nextGrid[y][x].temperature += (nearestSun.element.temperature - cell.temperature) * (heatFromSun / 1000);
+                    }
+                }
+
                 let tempSum = cell.temperature;
                 let count = 1;
+                const diffusionFactor = element.conductive ? 0.9 : 0.5;
 
                 for (let dy = -1; dy <= 1; dy++) {
                     for (let dx = -1; dx <= 1; dx++) {
@@ -150,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 // Apply a diffusion factor to smooth out the temperature change
-                nextGrid[y][x].temperature = cell.temperature + (tempSum / count - cell.temperature) * 0.5;
+                nextGrid[y][x].temperature = cell.temperature + (tempSum / count - cell.temperature) * diffusionFactor;
             }
         }
 
@@ -160,10 +189,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Pass 3: Life and Decay ---
         applyLifeAndDecay(nextGrid);
 
-        // --- Pass 4: Chemistry (Rules Engine) ---
+        // --- Pass 4: Magnetism ---
+        applyMagnetism(nextGrid);
+
+        // --- Pass 5: Chemistry (Rules Engine) ---
         applyRules(nextGrid);
 
-        // --- Pass 5: Physics (Gravity, Gas/Liquid movement) ---
+        // --- Pass 6: Physics (Gravity, Gas/Liquid movement) ---
         applyPhysics(nextGrid);
 
         grid = nextGrid;
@@ -199,6 +231,58 @@ document.addEventListener('DOMContentLoaded', () => {
                         nextGrid[y][x].symbol = 'DEAD';
                     } else {
                         nextGrid[y][x].lifespan = newLifespan;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles the attraction between magnetic particles.
+     */
+    function applyMagnetism(nextGrid) {
+        const magnetismRule = rules.find(r => r.is_magnetism && r.enabled);
+        if (!magnetismRule) return;
+
+        const magneticParticles = [];
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const cell = grid[y][x];
+                const element = elements[cell.symbol];
+                if (element && element.magnetic) {
+                    magneticParticles.push({x, y});
+                }
+            }
+        }
+
+        for (const particle of magneticParticles) {
+            if (Math.random() > magnetismRule.probability) continue;
+
+            let nearest = null;
+            let minDistance = Infinity;
+
+            for (const otherParticle of magneticParticles) {
+                if (particle.x === otherParticle.x && particle.y === otherParticle.y) continue;
+
+                const distance = Math.sqrt(Math.pow(particle.x - otherParticle.x, 2) + Math.pow(particle.y - otherParticle.y, 2));
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = otherParticle;
+                }
+            }
+
+            if (nearest) {
+                const dx = Math.sign(nearest.x - particle.x);
+                const dy = Math.sign(nearest.y - particle.y);
+                const nx = particle.x + dx;
+                const ny = particle.y + dy;
+
+                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                    const targetCell = nextGrid[ny][nx];
+                    if (targetCell.symbol === 'VACUUM') {
+                        const temp = nextGrid[particle.y][particle.x];
+                        nextGrid[particle.y][particle.x] = nextGrid[ny][nx];
+                        nextGrid[ny][nx] = temp;
                     }
                 }
             }

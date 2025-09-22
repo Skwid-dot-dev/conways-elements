@@ -24,14 +24,17 @@ Simply open `index.html` in a modern web browser that supports JavaScript ES6 mo
 - **Element Info Panel**: Hover over the grid to see details about any element or compound at that cell.
 - **Extensible Data Files**: All elements, compounds, and rules are defined in separate JSON files for easy modification and expansion.
 - **D3-based Visualization**: Grid cells are visually colored according to their temperature, giving an intuitive sense of heat flow and reactions.
+- **Magnetism**: Magnetic elements will attract each other, creating interesting new simulation possibilities.
+- **Conductivity**: Conductive elements transfer heat more efficiently, allowing for more realistic temperature simulations.
+- **Sun Special**: A new `SUN` special that provides a gradient of heat, with the temperature decreasing as the distance from the sun increases.
 
 ## The Elements and Compounds
 
 The simulation includes a wide variety of elements and compounds, each with its own unique properties.
 
 - **Elements**: Basic building blocks, defined in `elements.json`. These are based on the real periodic table and are the only options in the paint dropdown.
-- **Compounds**: More complex substances formed by chemical reactions, defined in `compounds.json`. This includes everything from water (`H2O`) and salt (`NACL`) to fire and life itself.
-- **Special Sources**: `HEAT` and `COLD` are persistent sources that raise or lower the temperature of grid cells and their neighbors.
+- **Compounds**: More complex substances formed by chemical reactions, defined in `compounds.json`. This includes everything from water (`H2O`) and salt (`NACL`) to fire, life, oil, and lava.
+- **Special Sources**: `HEAT` and `COLD` are persistent sources that raise or lower the temperature of grid cells and their neighbors. The `SUN` is a special source that provides a gradient of heat.
 
 ## The Rules
 
@@ -42,6 +45,8 @@ The chemical reactions that govern the simulation are defined in `rules.json`. Y
 - **Photosynthesis**: Carbon dioxide and water can combine to create `LIFE`.
 - **Acid Rain**: Sulfur dioxide and water can react to form corrosive sulfuric acid.
 - **Dissolution, Neutralization, Rusting, Decomposition, Phase Changes**: Many more lifelike rules for robust sandbox interactions.
+- **Magnetism**: Magnetic elements attract each other.
+- **Conductivity**: Conductive elements transfer heat more efficiently.
 
 ## Extending
 

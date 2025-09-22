@@ -27,6 +27,13 @@ const RULES_DATA = [
         "probability": 0.1
     },
     {
+        "name": "Oil Combustion (OIL + FIRE)",
+        "enabled": true,
+        "reactants": { "center": "OIL", "neighbors": ["FIRE"] },
+        "products": { "center": "FIRE", "consumed_neighbors": 1 },
+        "probability": 1.0
+    },
+    {
         "name": "CO2 Formation (C + O)",
         "enabled": true,
         "reactants": { "center": "C", "neighbors": ["O"] },
@@ -109,5 +116,11 @@ const RULES_DATA = [
         "reactants": { "center": "H2O", "neighbors": ["COLD"] },
         "products": { "center": "ICE", "consumed_neighbors": 1 },
         "probability": 1.0
+    },
+    {
+        "name": "Magnetism (Attraction)",
+        "enabled": true,
+        "is_magnetism": true,
+        "probability": 0.5
     }
 ];
