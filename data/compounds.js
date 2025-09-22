@@ -146,5 +146,16 @@ const COMPOUNDS_DATA = {
         "is_sun": true,
         "heat_range": 50,
         "heat_intensity": 100
+    },
+    "FUSION_SUN": {
+        "symbol": "FUSION_SUN",
+        "name": "Fusion Sun",
+        "color": "#FFEB3B",
+        "phase_at_stp": "Plasma",
+        "temperature": 15000,
+        "density_proxy": 200,
+        "is_sun": true,
+        "heat_range": 60,
+        "heat_intensity": 120
     }
 };

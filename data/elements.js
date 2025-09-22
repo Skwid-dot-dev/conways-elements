@@ -394,5 +394,21 @@ const ELEMENTS_DATA = {
         "density_proxy": 7.134,
         "color": "#7D80B0",
         "conductive": true
+    },
+    "H_PLASMA": {
+        "symbol": "H_PLASMA",
+        "name": "Hydrogen Plasma",
+        "color": "#FFFFFF",
+        "phase_at_stp": "Plasma",
+        "temperature": 6000,
+        "density_proxy": 0.01
+    },
+    "HE_PLASMA": {
+        "symbol": "HE_PLASMA",
+        "name": "Helium Plasma",
+        "color": "#FFFFE0",
+        "phase_at_stp": "Plasma",
+        "temperature": 7000,
+        "density_proxy": 0.01
     }
 };

@@ -8,8 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const brushSizeValue = document.getElementById('brushSizeValue');
     const startPauseBtn = document.getElementById('startPauseBtn');
     const clearBtn = document.getElementById('clearBtn');
+    const detailModeBtn = document.getElementById('detailModeBtn');
     const infoPanel = document.getElementById('infoPanel');
     const rulesetContainer = document.getElementById('ruleset');
+    const hudTimeEl = document.getElementById('hud-time');
+    const hudCellCountEl = document.getElementById('hud-cell-count');
 
     // --- Simulation Constants & State ---
     const GRID_SIZE = 100;
@@ -23,11 +26,32 @@ document.addEventListener('DOMContentLoaded', () => {
     let isRunning = false;
     let currentElement = 'C';
     let brushSize = 1;
-
-    // --- Color Scale for Temperature ---
-    // const colorScale = d3.interpolateRgbBasis(["#00BFFF", "#FFFFFF", "#FF4500"]); // Cold -> Neutral -> Hot
+    let isDetailMode = false;
+    let lockedCellCoords = null;
+    let simulationTime = 0;
+    let lastFrameTime = 0;
+    let frameCounter = 0;
 
     // --- Core Functions ---
+
+    function gameLoop(timestamp) {
+        if (!isRunning) {
+            lastFrameTime = 0;
+            return;
+        }
+
+        if (!lastFrameTime) {
+            lastFrameTime = timestamp;
+        }
+        const deltaTime = (timestamp - lastFrameTime) / 1000; // in seconds
+        lastFrameTime = timestamp;
+        simulationTime += deltaTime;
+
+        update();
+        render();
+
+        requestAnimationFrame(gameLoop);
+    }
 
     /**
      * Simple linear interpolation between two hex colors.
@@ -115,10 +139,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     /**
-     * The main simulation loop.
+     * The main simulation logic update.
      */
     function update() {
-        if (!isRunning) return;
+        frameCounter++;
+        if (frameCounter % 10 === 0) {
+            let cellCount = 0;
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (grid[y][x].symbol !== 'VACUUM') {
+                        cellCount++;
+                    }
+                }
+            }
+            hudCellCountEl.textContent = cellCount;
+        }
+        hudTimeEl.textContent = simulationTime.toFixed(1);
 
         let nextGrid = grid.map(row => row.map(cell => ({ ...cell })));
 
@@ -199,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
         applyPhysics(nextGrid);
 
         grid = nextGrid;
-        requestAnimationFrame(update);
     }
     
     /**
@@ -325,6 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (element.symbol === 'STEAM' && cell.temperature < 100) {
                     nextGrid[y][x].symbol = 'H2O';
                 }
+
+                // Plasma state change for Hydrogen
+                if (element.symbol === 'H' && cell.temperature > 5000) {
+                    nextGrid[y][x].symbol = 'H_PLASMA';
+                }
             }
         }
     }
@@ -379,8 +419,8 @@ document.addEventListener('DOMContentLoaded', () => {
                          }
                     }
 
-                } else if (phase === 'Gas') {
-                    // Gases rise and spread
+                } else if (phase === 'Gas' || phase === 'Plasma') {
+                    // Gases and Plasma rise and spread
                     if (y > 0) {
                         const aboveCell = nextGrid[y - 1][x];
                         const aboveElement = elements[aboveCell.symbol];
@@ -394,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (x + dir >= 0 && x + dir < GRID_SIZE) {
                         const sideCell = nextGrid[y][x + dir];
                         const sideElement = elements[sideCell.symbol];
-                        if (sideElement && sideElement.phase_at_stp === 'Gas' && density > (sideElement.density_proxy || 0)) {
+                        if (sideElement && (sideElement.phase_at_stp === 'Gas' || sideElement.phase_at_stp === 'Plasma') && density > (sideElement.density_proxy || 0)) {
                             swap(x, y, x + dir, y);
                             continue;
                         }
@@ -416,6 +456,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 for (const rule of rules) {
                     if (!rule.enabled || Math.random() > (rule.probability || 1.0)) continue;
+
+                    // Temperature check for temperature-dependent rules
+                    if (rule.min_temperature && cell.temperature < rule.min_temperature) {
+                        continue;
+                    }
 
                     // Generic combustion rule
                     if (rule.is_combustion && element.flammability) {
@@ -491,15 +536,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cell = grid[y][x];
                 const element = elements[cell.symbol];
                 if (element) {
-                    // Normalize temperature to a 0-1 range for the color scale
-                    // Clamping temperature between -100 and 1000 for visualization
-                    const tempRatio = Math.max(0, Math.min(1, (cell.temperature + 100) / 1100));
-                    ctx.fillStyle = getColorForTemperature(tempRatio);
-                    ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    if (element.phase_at_stp === 'Plasma') {
+                        // Glowing effect for plasma
+                        ctx.fillStyle = element.color + '80'; // Add alpha for the glow
+                        ctx.fillRect((x - 0.5) * CELL_SIZE, (y - 0.5) * CELL_SIZE, CELL_SIZE * 2, CELL_SIZE * 2);
+                        ctx.fillStyle = element.color;
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    } else {
+                        // Normalize temperature to a 0-1 range for the color scale
+                        // Clamping temperature between -100 and 1000 for visualization
+                        const tempRatio = Math.max(0, Math.min(1, (cell.temperature + 100) / 1100));
+                        ctx.fillStyle = getColorForTemperature(tempRatio);
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
                 }
             }
         }
-        requestAnimationFrame(render);
     }
     
     /** Populates the dropdown with categorized elements and compounds */
@@ -607,12 +659,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /** Updates the info panel based on the cell under the mouse */
     function updateInfoPanel(e) {
-        const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / CELL_SIZE);
-        const y = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+        let x, y, isLocked;
+
+        if (lockedCellCoords) {
+            x = lockedCellCoords.x;
+            y = lockedCellCoords.y;
+            isLocked = true;
+        } else {
+            const rect = canvas.getBoundingClientRect();
+            x = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+            y = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+            isLocked = false;
+        }
 
         if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) {
-            infoPanel.innerHTML = '<h3>Element Information</h3><p>Hover over the grid to see details.</p>';
+            if (!isLocked) {
+                infoPanel.innerHTML = '<h3>Element Information</h3><p>Hover over the grid to see details.</p>';
+            }
             return;
         }
 
@@ -621,7 +684,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (element) {
             infoPanel.innerHTML = `
-                <h3>Element Information</h3>
+                <h3>Element Information ${isLocked ? '(Locked)' : ''}</h3>
+                <p><strong>Coords:</strong> (${x}, ${y})</p>
                 <p><strong>Symbol:</strong> ${element.symbol}</p>
                 <p><strong>Name:</strong> ${element.name || 'N/A'}</p>
                 <p><strong>State:</strong> ${element.phase_at_stp || 'N/A'}</p>
@@ -651,23 +715,76 @@ document.addEventListener('DOMContentLoaded', () => {
         startPauseBtn.addEventListener('click', () => {
             isRunning = !isRunning;
             startPauseBtn.textContent = isRunning ? 'Pause' : 'Start';
-            if (isRunning) update();
+            if (isRunning) {
+                requestAnimationFrame(gameLoop);
+            }
         });
-        clearBtn.addEventListener('click', initializeGrid);
+        clearBtn.addEventListener('click', () => {
+            initializeGrid();
+            if (!isRunning) {
+                render();
+            }
+        });
+
+        detailModeBtn.addEventListener('click', () => {
+            isDetailMode = !isDetailMode;
+            detailModeBtn.classList.toggle('active');
+            canvas.style.cursor = isDetailMode ? 'crosshair' : 'default';
+            if (!isDetailMode) {
+                lockedCellCoords = null;
+                updateInfoPanel({ clientX: -1, clientY: -1 });
+            }
+        });
 
         let isMouseDown = false;
-        canvas.addEventListener('mousedown', (e) => { isMouseDown = true; paint(e); });
-        canvas.addEventListener('mouseup', () => isMouseDown = false);
-        canvas.addEventListener('mouseleave', () => isMouseDown = false);
+        canvas.addEventListener('mousedown', (e) => {
+            if (isDetailMode) {
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+                const y = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+
+                if (lockedCellCoords && lockedCellCoords.x === x && lockedCellCoords.y === y) {
+                    lockedCellCoords = null; // Unlock
+                    canvas.style.cursor = 'crosshair';
+                } else {
+                    lockedCellCoords = { x, y }; // Lock
+                    canvas.style.cursor = 'pointer';
+                }
+                updateInfoPanel(e);
+            } else {
+                isMouseDown = true;
+                paint(e);
+                if (!isRunning) {
+                    render();
+                }
+            }
+        });
+        canvas.addEventListener('mouseup', () => {
+            if (!isDetailMode) {
+                isMouseDown = false;
+            }
+        });
+        canvas.addEventListener('mouseleave', () => {
+            if (!isDetailMode) {
+                isMouseDown = false;
+            }
+        });
         canvas.addEventListener('mousemove', (e) => {
-            updateInfoPanel(e);
-            if (isMouseDown) paint(e);
+            if (!lockedCellCoords) {
+                updateInfoPanel(e);
+            }
+            if (isMouseDown && !isDetailMode) {
+                paint(e);
+                if (!isRunning) {
+                    render();
+                }
+            }
         });
         
         // Clear loading message
         infoPanel.innerHTML = '<h3>Element Information</h3><p>Hover over the grid to see details.</p>';
         
-        render();
+        render(); // Initial render
     }
 
     init();

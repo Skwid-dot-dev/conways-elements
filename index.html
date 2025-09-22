@@ -9,6 +9,10 @@
 <body>
     <div class="container">
         <div class="simulation-area">
+            <div id="hud" class="hud-container">
+                <div class="hud-item">Time: <span id="hud-time">0</span>s</div>
+                <div class="hud-item">Cells: <span id="hud-cell-count">0</span></div>
+            </div>
             <canvas id="simulationCanvas"></canvas>
         </div>
         <div class="controls-panel">
@@ -24,6 +28,7 @@
             <div class="control-group button-group">
                 <button id="startPauseBtn">Start</button>
                 <button id="clearBtn">Clear</button>
+                <button id="detailModeBtn" title="Toggle Detail Mode">🔍</button>
             </div>
             <div id="infoPanel" class="info-box">
                 <h3>Element Information</h3>

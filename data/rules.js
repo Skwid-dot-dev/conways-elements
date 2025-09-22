@@ -122,5 +122,21 @@ const RULES_DATA = [
         "enabled": true,
         "is_magnetism": true,
         "probability": 0.5
+    },
+    {
+        "name": "Hydrogen Fusion (2H_PLASMA -> HE_PLASMA + Energy)",
+        "enabled": true,
+        "reactants": { "center": "H_PLASMA", "neighbors": ["H_PLASMA"] },
+        "products": { "center": "HE_PLASMA", "consumed_neighbors": 1 },
+        "probability": 0.8,
+        "min_temperature": 6000
+    },
+    {
+        "name": "Sun Formation (H_PLASMA + HE_PLASMA -> FUSION_SUN)",
+        "enabled": true,
+        "reactants": { "center": "H_PLASMA", "neighbors": ["HE_PLASMA"] },
+        "products": { "center": "FUSION_SUN", "consumed_neighbors": 1 },
+        "probability": 0.01,
+        "min_temperature": 7000
     }
 ];
