@@ -1,4 +1,4 @@
-[
+const RULES_DATA = [
     {
         "name": "Water Formation (O + 2H)",
         "enabled": true,
@@ -110,4 +110,4 @@
         "products": { "center": "ICE", "consumed_neighbors": 1 },
         "probability": 1.0
     }
-]
+];

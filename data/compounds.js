@@ -1,4 +1,4 @@
-{
+const COMPOUNDS_DATA = {
     "VACUUM": {
         "symbol": "VACUUM",
         "name": "Vacuum",
@@ -119,4 +119,4 @@
         "temperature": 25,
         "density_proxy": 0.657
     }
-}
+};
