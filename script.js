@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOMContentLoaded event fired. script.js is running.");
     // --- DOM Elements ---
     const canvas = document.getElementById('simulationCanvas');
     const ctx = canvas.getContext('2d');
@@ -24,88 +25,83 @@ document.addEventListener('DOMContentLoaded', () => {
     let brushSize = 1;
 
     // --- Color Scale for Temperature ---
-    const colorScale = d3.interpolateRgbBasis(["#00BFFF", "#FFFFFF", "#FF4500"]); // Cold -> Neutral -> Hot
+    // const colorScale = d3.interpolateRgbBasis(["#00BFFF", "#FFFFFF", "#FF4500"]); // Cold -> Neutral -> Hot
 
     // --- Core Functions ---
 
     /**
-     * Loads element and rule data from external JSON files.
+     * Simple linear interpolation between two hex colors.
+     * @param {string} color1 - Start color in hex format (e.g., "#00BFFF")
+     * @param {string} color2 - End color in hex format (e.g., "#FF4500")
+     * @param {number} factor - A value between 0 and 1.
+     * @returns {string} The interpolated color in hex format.
      */
-    async function loadData() {
-        try {
-            const [elementsResponse, compoundsResponse, rulesResponse] = await Promise.all([
-                fetch('elements.json'),
-                fetch('compounds.json'), 
-                fetch('rules.json')
-            ]);
-            
-            if (!elementsResponse.ok || !compoundsResponse.ok || !rulesResponse.ok) {
-                throw new Error('Failed to fetch data files');
-            }
-            
-            const elementsFromFile = await elementsResponse.json();
-            const compoundsFromFile = await compoundsResponse.json();
-            rules = await rulesResponse.json();
-            
-            // Add default temperature to elements that don't have it
-            Object.keys(elementsFromFile).forEach(key => {
-                if (!elementsFromFile[key].temperature) {
-                    elementsFromFile[key].temperature = 25; // Room temperature default
-                }
-            });
-            
-            // Merge elements and compounds
-            elements = { ...elementsFromFile, ...compoundsFromFile };
+    function interpolateColor(color1, color2, factor) {
+        const r1 = parseInt(color1.substring(1, 3), 16);
+        const g1 = parseInt(color1.substring(3, 5), 16);
+        const b1 = parseInt(color1.substring(5, 7), 16);
 
-            populateElementSelector();
-            populateRuleset();
-            
-            console.log('Data loaded successfully:', Object.keys(elements).length, 'elements loaded');
-        } catch (error) {
-            console.error("Error loading data:", error);
-            // Provide a basic fallback
+        const r2 = parseInt(color2.substring(1, 3), 16);
+        const g2 = parseInt(color2.substring(3, 5), 16);
+        const b2 = parseInt(color2.substring(5, 7), 16);
+
+        const r = Math.round(r1 + factor * (r2 - r1));
+        const g = Math.round(g1 + factor * (g2 - g1));
+        const b = Math.round(b1 + factor * (b2 - b1));
+
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+
+    /**
+     * Gets a color from a 3-color gradient (cold, neutral, hot).
+     * @param {number} ratio - A value between 0 and 1.
+     * @returns {string} The interpolated color.
+     */
+    function getColorForTemperature(ratio) {
+        const coldColor = "#00BFFF";
+        const neutralColor = "#FFFFFF";
+        const hotColor = "#FF4500";
+
+        if (ratio < 0.5) {
+            // Interpolate between cold and neutral
+            return interpolateColor(coldColor, neutralColor, ratio * 2);
+        } else {
+            // Interpolate between neutral and hot
+            return interpolateColor(neutralColor, hotColor, (ratio - 0.5) * 2);
+        }
+    }
+
+    /**
+     * Loads element and rule data from the pre-loaded JavaScript data files.
+     */
+    function loadData() {
+        if (typeof ELEMENTS_DATA === 'undefined' || typeof COMPOUNDS_DATA === 'undefined' || typeof RULES_DATA === 'undefined') {
+            console.error("Data files not loaded correctly. Make sure elements.js, compounds.js, and rules.js are included before script.js.");
+            // Provide a basic fallback to prevent total crash
             elements = {
-                'VACUUM': {
-                    symbol: 'VACUUM',
-                    name: 'Vacuum',
-                    color: '#000000',
-                    phase_at_stp: 'Gas',
-                    temperature: -273,
-                    density_proxy: 0
-                },
-                'C': {
-                    symbol: 'C',
-                    atomic_number: 6,
-                    name: 'Carbon',
-                    color: '#909090',
-                    phase_at_stp: 'Solid',
-                    temperature: 25,
-                    density_proxy: 2.267,
-                    flammability: true
-                },
-                'H': {
-                    symbol: 'H',
-                    atomic_number: 1,
-                    name: 'Hydrogen',
-                    color: '#FFFFFF',
-                    phase_at_stp: 'Gas',
-                    temperature: 25,
-                    density_proxy: 0.08988,
-                    flammability: true
-                },
-                'O': {
-                    symbol: 'O',
-                    atomic_number: 8,
-                    name: 'Oxygen',
-                    color: '#FF0D0D',
-                    phase_at_stp: 'Gas',
-                    temperature: 25,
-                    density_proxy: 1.429
-                }
+                'VACUUM': { symbol: 'VACUUM', name: 'Vacuum', color: '#000000', phase_at_stp: 'Gas', temperature: -273, density_proxy: 0 },
+                'ERROR': { symbol: 'ERROR', name: 'Error', color: '#FF00FF', phase_at_stp: 'Solid', temperature: 0, density_proxy: 1 }
             };
             rules = [];
             populateElementSelector();
+            return;
         }
+
+        // Add default temperature to elements that don't have it
+        Object.keys(ELEMENTS_DATA).forEach(key => {
+            if (!ELEMENTS_DATA[key].temperature) {
+                ELEMENTS_DATA[key].temperature = 25; // Room temperature default
+            }
+        });
+
+        // Merge elements and compounds
+        elements = { ...ELEMENTS_DATA, ...COMPOUNDS_DATA };
+        rules = RULES_DATA;
+
+        populateElementSelector();
+        populateRuleset();
+
+        console.log('Data loaded successfully:', Object.keys(elements).length, 'elements loaded');
     }
 
     /**
@@ -414,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Normalize temperature to a 0-1 range for the color scale
                     // Clamping temperature between -100 and 1000 for visualization
                     const tempRatio = Math.max(0, Math.min(1, (cell.temperature + 100) / 1100));
-                    ctx.fillStyle = colorScale(tempRatio);
+                    ctx.fillStyle = getColorForTemperature(tempRatio);
                     ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 }
             }
@@ -555,11 +551,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /** Initializes the entire application */
-    async function init() {
+    function init() {
         // Show loading message
         infoPanel.innerHTML = '<h3>Loading...</h3><p>Loading element data...</p>';
         
-        await loadData();
+        loadData();
         initializeGrid();
 
         // Event Listeners

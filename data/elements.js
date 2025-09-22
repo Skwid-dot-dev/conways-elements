@@ -1,4 +1,4 @@
-{
+const ELEMENTS_DATA = {
     "H": {
         "symbol": "H",
         "atomic_number": 1,
@@ -390,4 +390,4 @@
         "density_proxy": 7.134,
         "color": "#7D80B0"
     }
-}
+};
