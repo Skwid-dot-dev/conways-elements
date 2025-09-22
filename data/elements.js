@@ -166,7 +166,8 @@ const ELEMENTS_DATA = {
         "flammability": true,
         "solubility": false,
         "density_proxy": 2.698,
-        "color": "#BFA6A6"
+        "color": "#BFA6A6",
+        "conductive": true
     },
     "Si": {
         "symbol": "Si",
@@ -335,7 +336,9 @@ const ELEMENTS_DATA = {
         "flammability": false,
         "solubility": false,
         "density_proxy": 7.874,
-        "color": "#E06633"
+        "color": "#E06633",
+        "magnetic": true,
+        "conductive": true
     },
     "Co": {
         "symbol": "Co",
@@ -361,7 +364,8 @@ const ELEMENTS_DATA = {
         "flammability": false,
         "solubility": false,
         "density_proxy": 8.908,
-        "color": "#50D050"
+        "color": "#50D050",
+        "conductive": true
     },
     "Cu": {
         "symbol": "Cu",
@@ -388,6 +392,7 @@ const ELEMENTS_DATA = {
         "flammability": false,
         "solubility": false,
         "density_proxy": 7.134,
-        "color": "#7D80B0"
+        "color": "#7D80B0",
+        "conductive": true
     }
 };
