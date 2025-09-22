@@ -10,9 +10,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clearBtn');
     const infoPanel = document.getElementById('infoPanel');
     const rulesetContainer = document.getElementById('ruleset');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomValue = document.getElementById('zoomValue');
+    const panXSlider = document.getElementById('panXSlider');
+    const panXValue = document.getElementById('panXValue');
+    const panYSlider = document.getElementById('panYSlider');
+    const panYValue = document.getElementById('panYValue');
+    const createPlanetBtn = document.getElementById('createPlanetBtn');
+    const planetModal = document.getElementById('planetModal');
+    const closeButton = document.querySelector('.close-button');
+    const elementList = document.getElementById('elementList');
+    const addPlanetButton = document.getElementById('addPlanetButton');
+    const gravityToggle = document.getElementById('gravityToggle');
 
     // --- Simulation Constants & State ---
-    const GRID_SIZE = 100;
+    const GRID_SIZE = 200;
     const CELL_SIZE = 5;
     canvas.width = GRID_SIZE * CELL_SIZE;
     canvas.height = GRID_SIZE * CELL_SIZE;
@@ -23,6 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let isRunning = false;
     let currentElement = 'C';
     let brushSize = 1;
+    let zoom = 1;
+    let panX = 0;
+    let panY = 0;
+    let massBasedGravityEnabled = true;
 
     // --- Color Scale for Temperature ---
     // const colorScale = d3.interpolateRgbBasis(["#00BFFF", "#FFFFFF", "#FF4500"]); // Cold -> Neutral -> Hot
@@ -242,6 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Pass 7: Physics (Gravity, Gas/Liquid movement) ---
         applyPhysics(nextGrid);
 
+        // --- Pass 8: Mass-based Gravity ---
+        if (massBasedGravityEnabled) {
+            applyMassBasedGravity(nextGrid);
+        }
+
         grid = nextGrid;
         requestAnimationFrame(update);
     }
@@ -393,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     nextGrid[y2][x2] = temp;
                 };
 
-                if (phase === 'Solid') {
+                if (phase === 'Solid' && currentElement.symbol !== 'PLANET') {
                     // Solids fall down
                     if (y < GRID_SIZE - 1) {
                         const belowCell = nextGrid[y + 1][x];
@@ -528,7 +549,10 @@ document.addEventListener('DOMContentLoaded', () => {
      * Renders the grid to the canvas, with cell color based on temperature.
      */
     function render() {
+        ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.translate(panX, panY);
+        ctx.scale(zoom, zoom);
 
         for (let y = 0; y < GRID_SIZE; y++) {
             for (let x = 0; x < GRID_SIZE; x++) {
@@ -543,6 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+        ctx.restore();
         requestAnimationFrame(render);
     }
     
@@ -625,8 +650,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /** Paints the selected element on the grid */
     function paint(e) {
         const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / CELL_SIZE);
-        const y = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+        const x = Math.floor(((e.clientX - rect.left) - panX) / (CELL_SIZE * zoom));
+        const y = Math.floor(((e.clientY - rect.top) - panY) / (CELL_SIZE * zoom));
 
         if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return;
 
@@ -652,8 +677,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /** Updates the info panel based on the cell under the mouse */
     function updateInfoPanel(e) {
         const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / CELL_SIZE);
-        const y = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+        const x = Math.floor(((e.clientX - rect.left) - panX) / (CELL_SIZE * zoom));
+        const y = Math.floor(((e.clientY - rect.top) - panY) / (CELL_SIZE * zoom));
 
         if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) {
             infoPanel.innerHTML = '<h3>Element Information</h3><p>Hover over the grid to see details.</p>';
@@ -692,6 +717,18 @@ document.addEventListener('DOMContentLoaded', () => {
             brushSize = parseInt(e.target.value, 10);
             brushSizeValue.textContent = brushSize;
         });
+        zoomSlider.addEventListener('input', (e) => {
+            zoom = parseFloat(e.target.value);
+            zoomValue.textContent = zoom.toFixed(1);
+        });
+        panXSlider.addEventListener('input', (e) => {
+            panX = parseInt(e.target.value, 10);
+            panXValue.textContent = panX;
+        });
+        panYSlider.addEventListener('input', (e) => {
+            panY = parseInt(e.target.value, 10);
+            panYValue.textContent = panY;
+        });
         startPauseBtn.addEventListener('click', () => {
             isRunning = !isRunning;
             startPauseBtn.textContent = isRunning ? 'Pause' : 'Start';
@@ -711,7 +748,131 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear loading message
         infoPanel.innerHTML = '<h3>Element Information</h3><p>Hover over the grid to see details.</p>';
         
+        createPlanetBtn.addEventListener('click', () => {
+            planetModal.style.display = 'block';
+            populateElementList();
+        });
+
+        closeButton.addEventListener('click', () => {
+            planetModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target == planetModal) {
+                planetModal.style.display = 'none';
+            }
+        });
+
+        addPlanetButton.addEventListener('click', () => {
+            const planetComposition = {};
+            const inputs = elementList.querySelectorAll('input');
+            inputs.forEach(input => {
+                if (parseInt(input.value) > 0) {
+                    planetComposition[input.dataset.symbol] = parseInt(input.value);
+                }
+            });
+            createPlanet(planetComposition);
+            planetModal.style.display = 'none';
+        });
+
+        gravityToggle.addEventListener('change', (e) => {
+            massBasedGravityEnabled = e.target.checked;
+        });
+
         render();
+    }
+
+    function populateElementList() {
+        elementList.innerHTML = '';
+        const sortedElements = Object.keys(elements).sort((a, b) => (elements[a].atomic_number || 999) - (elements[b].atomic_number || 999));
+
+        sortedElements.forEach(symbol => {
+            if (symbol === 'VACUUM') return;
+            const element = elements[symbol];
+            const item = document.createElement('div');
+            item.className = 'element-item';
+            item.innerHTML = `
+                <label for="el-${symbol}">${element.name || symbol}</label>
+                <input type="number" id="el-${symbol}" data-symbol="${symbol}" value="0" min="0">
+            `;
+            elementList.appendChild(item);
+        });
+    }
+
+    function applyMassBasedGravity(nextGrid) {
+        const planets = [];
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                if (nextGrid[y][x].symbol === 'PLANET') {
+                    planets.push({ x, y, cell: nextGrid[y][x] });
+                }
+            }
+        }
+
+        if (planets.length < 2) return;
+
+        const G = 0.1; // Gravitational constant - needs tweaking
+
+        for (let i = 0; i < planets.length; i++) {
+            for (let j = i + 1; j < planets.length; j++) {
+                const p1 = planets[i];
+                const p2 = planets[j];
+
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const distSq = dx * dx + dy * dy;
+
+                if (distSq < 1) distSq = 1; // Avoid division by zero
+
+                const force = G * p1.cell.mass * p2.cell.mass / distSq;
+
+                const angle = Math.atan2(dy, dx);
+                const forceX = Math.cos(angle) * force;
+                const forceY = Math.sin(angle) * force;
+
+                // Update velocities
+                p1.cell.vx += forceX / p1.cell.mass;
+                p1.cell.vy += forceY / p1.cell.mass;
+                p2.cell.vx -= forceX / p2.cell.mass;
+                p2.cell.vy -= forceY / p2.cell.mass;
+            }
+        }
+
+        // Move planets
+        for (const p of planets) {
+            const newX = Math.round(p.x + p.cell.vx);
+            const newY = Math.round(p.y + p.cell.vy);
+
+            if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE && (newX !== p.x || newY !== p.y)) {
+                if (nextGrid[newY][newX].symbol === 'VACUUM') {
+                    nextGrid[newY][newX] = p.cell;
+                    nextGrid[p.y][p.x] = { symbol: 'VACUUM', temperature: -273 };
+                }
+            }
+        }
+    }
+
+    function createPlanet(composition) {
+        let totalMass = 0;
+        for (const symbol in composition) {
+            const quantity = composition[symbol];
+            const element = elements[symbol];
+            if (element && element.mass) {
+                totalMass += element.mass * quantity;
+            }
+        }
+
+        const centerX = Math.floor(GRID_SIZE / 2);
+        const centerY = Math.floor(GRID_SIZE / 2);
+
+        grid[centerY][centerX] = {
+            symbol: 'PLANET',
+            temperature: 25,
+            mass: totalMass,
+            composition: composition,
+            vx: 0, // velocity x
+            vy: 0  // velocity y
+        };
     }
 
     init();

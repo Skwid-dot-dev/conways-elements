@@ -24,6 +24,19 @@
             <div class="control-group button-group">
                 <button id="startPauseBtn">Start</button>
                 <button id="clearBtn">Clear</button>
+                <button id="createPlanetBtn">Create Planet</button>
+            </div>
+            <div class="control-group">
+                <label for="zoomSlider">Zoom: <span id="zoomValue">1</span>x</label>
+                <input type="range" id="zoomSlider" min="0.5" max="4" value="1" step="0.1">
+            </div>
+            <div class="control-group">
+                <label for="panXSlider">Pan X: <span id="panXValue">0</span></label>
+                <input type="range" id="panXSlider" min="-100" max="100" value="0">
+            </div>
+            <div class="control-group">
+                <label for="panYSlider">Pan Y: <span id="panYValue">0</span></label>
+                <input type="range" id="panYSlider" min="-100" max="100" value="0">
             </div>
             <div id="infoPanel" class="info-box">
                 <h3>Element Information</h3>
@@ -32,6 +45,13 @@
             <div id="ruleset" class="info-box">
                 <h3>Interaction Rules</h3>
                 <!-- Rules will be dynamically populated here -->
+            </div>
+            <div class="control-group">
+                <h3>Feature Toggles</h3>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="gravityToggle" checked>
+                    <label for="gravityToggle">Mass-Based Gravity</label>
+                </div>
             </div>
         </div>
     </div>
@@ -43,5 +63,15 @@
 
     <!-- Main Simulation Script -->
     <script src="script.js"></script>
+
+    <!-- Planet Creation Modal -->
+    <div id="planetModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Create a Planet</h2>
+            <div id="elementList"></div>
+            <button id="addPlanetButton">Add Planet</button>
+        </div>
+    </div>
 </body>
 </html>
