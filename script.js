@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const elementList = document.getElementById('elementList');
     const addPlanetButton = document.getElementById('addPlanetButton');
     const gravityToggle = document.getElementById('gravityToggle');
+    const returnToSpaceBtn = document.getElementById('returnToSpaceBtn');
 
     // --- Simulation Constants & State ---
     const CHUNK_SIZE = 32; // 32x32 cells per chunk
@@ -43,6 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let atmospheresEnabled = true;
     let coresEnabled = true;
     let globalVacuumTemp = -273;
+
+    // --- View State ---
+    let simulationView = {
+        mode: 'space', // 'space' or 'planet'
+        body: null, // The celestial body being viewed in 'planet' mode
+    };
+    let planetGrid = null; // Will hold the 2D array for the planet surface view
+    let savedWorldState = { world: null, celestialBodies: null };
+
 
     class CelestialBody {
         constructor(x, y, composition) {
@@ -369,6 +379,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function update() {
         if (!isRunning) return;
 
+        if (simulationView.mode === 'space') {
+            updateSpace();
+        } else if (simulationView.mode === 'planet') {
+            updatePlanetSurface();
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    function updateSpace() {
         const visibleKeys = getVisibleChunkKeys();
         const nextStates = new Map();
         const crossChunkMovers = [];
@@ -423,8 +443,94 @@ document.addEventListener('DOMContentLoaded', () => {
             body.prevX = tempX;
             body.prevY = tempY;
         }
+    }
 
-        requestAnimationFrame(update);
+    function updatePlanetSurface() {
+        if (!planetGrid) return;
+
+        const nextGrid = JSON.parse(JSON.stringify(planetGrid));
+
+        // Simplified physics and rules for the planet surface
+        applyPlanetPhysics(planetGrid, nextGrid);
+        // We can reuse some of the existing logic if we adapt it for a 2D array
+        // For now, let's stick to physics.
+
+        planetGrid = nextGrid;
+    }
+
+    function applyPlanetPhysics(currentGrid, nextGrid) {
+        const gridHeight = currentGrid.length;
+        const gridWidth = currentGrid[0].length;
+        const gravity = Math.min(5, 1 + Math.floor(simulationView.body.mass / 1000)); // Gravity strength based on mass
+
+        for (let y = gridHeight - 2; y >= 0; y--) {
+            for (let x = 0; x < gridWidth; x++) {
+                const currentCell = nextGrid[y][x];
+                const currentElement = elements[currentCell.symbol];
+
+                if (!currentElement || currentElement.symbol === 'VACUUM') continue;
+
+                const phase = currentElement.phase_at_stp;
+                const density = currentElement.density_proxy || 1.0;
+
+                if (phase === 'Solid' || phase === 'Liquid') {
+                    let targetY = y;
+                    for (let i = 1; i <= gravity; i++) {
+                        const newY = y + i;
+                        if (newY >= gridHeight) break;
+                        const belowCell = nextGrid[newY][x];
+                        const belowElement = elements[belowCell.symbol];
+                        if (!belowElement || belowElement.symbol === 'VACUUM' || density > (belowElement.density_proxy || 0)) {
+                            targetY = newY;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (targetY !== y) {
+                        const temp = nextGrid[y][x];
+                        nextGrid[y][x] = nextGrid[targetY][x];
+                        nextGrid[targetY][x] = temp;
+                        continue; // Move to next particle
+                    }
+                }
+
+                if (phase === 'Liquid') {
+                     // Spread to the sides
+                    const dir = Math.random() < 0.5 ? 1 : -1;
+                    const sideX = x + dir;
+                    if (sideX >= 0 && sideX < gridWidth) {
+                         const sideCell = nextGrid[y][sideX];
+                         const sideElement = elements[sideCell.symbol];
+                         if (sideElement && sideElement.symbol === 'VACUUM') {
+                             const temp = nextGrid[y][x];
+                             nextGrid[y][x] = nextGrid[y][sideX];
+                             nextGrid[y][sideX] = temp;
+                         }
+                    }
+                } else if (phase === 'Gas') {
+                    // Gases rise
+                    let targetY = y;
+                     for (let i = 1; i <= gravity; i++) { // Use gravity for 'buoyancy' strength
+                        const newY = y - i;
+                        if (newY < 0) break;
+                        const aboveCell = nextGrid[newY][x];
+                        const aboveElement = elements[aboveCell.symbol];
+                        if (!aboveElement || aboveElement.symbol === 'VACUUM' || density < (aboveElement.density_proxy || 0)) {
+                            targetY = newY;
+                        } else {
+                            break;
+                        }
+                    }
+                     if (targetY !== y) {
+                        const temp = nextGrid[y][x];
+                        nextGrid[y][x] = nextGrid[targetY][x];
+                        nextGrid[targetY][x] = temp;
+                        continue; // Move to next particle
+                    }
+                }
+            }
+        }
     }
 
 function applyPhysics(chunk, nextChunk, crossChunkMovers) {
@@ -976,6 +1082,18 @@ function applyRules(chunk, nextChunk) {
     function render() {
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (simulationView.mode === 'space') {
+            renderSpace();
+        } else if (simulationView.mode === 'planet') {
+            renderPlanetSurface();
+        }
+
+        ctx.restore();
+        requestAnimationFrame(render);
+    }
+
+    function renderSpace() {
         ctx.translate(panX, panY);
         ctx.scale(zoom, zoom);
 
@@ -1006,9 +1124,28 @@ function applyRules(chunk, nextChunk) {
         for (const body of celestialBodies) {
             body.draw(ctx);
         }
+    }
 
-        ctx.restore();
-        requestAnimationFrame(render);
+    function renderPlanetSurface() {
+        if (!planetGrid) return;
+
+        const gridWidth = planetGrid[0].length;
+        const gridHeight = planetGrid.length;
+
+        // Simple render: no pan/zoom for now
+        for (let y = 0; y < gridHeight; y++) {
+            for (let x = 0; x < gridWidth; x++) {
+                const cell = planetGrid[y][x];
+                if (cell.symbol !== 'VACUUM') {
+                    const element = elements[cell.symbol];
+                    if (element) {
+                        const tempRatio = Math.max(0, Math.min(1, (cell.temperature + 100) / 1100));
+                        ctx.fillStyle = getColorForTemperature(tempRatio);
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
+                }
+            }
+        }
     }
 
     function getVisibleChunkKeys() {
@@ -1110,21 +1247,44 @@ function applyRules(chunk, nextChunk) {
     /** Paints the selected element on the grid */
     function paint(e) {
         const rect = canvas.getBoundingClientRect();
-        const worldX = Math.floor(((e.clientX - rect.left) / zoom - panX) / CELL_SIZE);
-        const worldY = Math.floor(((e.clientY - rect.top) / zoom - panY) / CELL_SIZE);
+        const selectedElement = elements[currentElement];
+        if (!selectedElement) return;
 
         const radius = Math.floor(brushSize / 2);
-        for (let i = -radius; i <= radius; i++) {
-            for (let j = -radius; j <= radius; j++) {
-                if (Math.sqrt(i * i + j * j) > radius) continue;
-                const newX = worldX + j;
-                const newY = worldY + i;
-                const selectedElement = elements[currentElement];
-                if (selectedElement) {
+
+        if (simulationView.mode === 'space') {
+            const worldX = Math.floor(((e.clientX - rect.left) / zoom - panX) / CELL_SIZE);
+            const worldY = Math.floor(((e.clientY - rect.top) / zoom - panY) / CELL_SIZE);
+
+            for (let i = -radius; i <= radius; i++) {
+                for (let j = -radius; j <= radius; j++) {
+                    if (Math.sqrt(i * i + j * j) > radius) continue;
+                    const newX = worldX + j;
+                    const newY = worldY + i;
                     setCell(newX, newY, {
                         symbol: currentElement,
                         temperature: selectedElement.temperature || 25
                     });
+                }
+            }
+        } else if (simulationView.mode === 'planet' && planetGrid) {
+            const gridX = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+            const gridY = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+            const gridHeight = planetGrid.length;
+            const gridWidth = planetGrid[0].length;
+
+            for (let i = -radius; i <= radius; i++) {
+                for (let j = -radius; j <= radius; j++) {
+                    if (Math.sqrt(i * i + j * j) > radius) continue;
+                    const newX = gridX + j;
+                    const newY = gridY + i;
+
+                    if (newX >= 0 && newX < gridWidth && newY >= 0 && newY < gridHeight) {
+                        planetGrid[newY][newX] = {
+                            symbol: currentElement,
+                            temperature: selectedElement.temperature || 25
+                        };
+                    }
                 }
             }
         }
@@ -1133,10 +1293,23 @@ function applyRules(chunk, nextChunk) {
     /** Updates the info panel based on the cell under the mouse */
     function updateInfoPanel(e) {
         const rect = canvas.getBoundingClientRect();
-        const worldX = Math.floor(((e.clientX - rect.left) / zoom - panX) / CELL_SIZE);
-        const worldY = Math.floor(((e.clientY - rect.top) / zoom - panY) / CELL_SIZE);
+        let cell = null;
+        let x = 0, y = 0;
 
-        const cell = getCell(worldX, worldY);
+        if (simulationView.mode === 'space') {
+            x = Math.floor(((e.clientX - rect.left) / zoom - panX) / CELL_SIZE);
+            y = Math.floor(((e.clientY - rect.top) / zoom - panY) / CELL_SIZE);
+            cell = getCell(x, y);
+        } else if (simulationView.mode === 'planet' && planetGrid) {
+            x = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+            y = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+            const gridHeight = planetGrid.length;
+            const gridWidth = planetGrid[0].length;
+            if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight) {
+                cell = planetGrid[y][x];
+            }
+        }
+
         if (!cell) {
             infoPanel.innerHTML = '<h3>Element Information</h3><p>Hover over the grid to see details.</p>';
             return;
@@ -1146,7 +1319,7 @@ function applyRules(chunk, nextChunk) {
         if (element) {
             infoPanel.innerHTML = `
                 <h3>Element Information</h3>
-                <p><strong>Coords:</strong> ${worldX}, ${worldY}</p>
+                <p><strong>Coords:</strong> ${x}, ${y}</p>
                 <p><strong>Symbol:</strong> ${element.symbol}</p>
                 <p><strong>Name:</strong> ${element.name || 'N/A'}</p>
                 <p><strong>State:</strong> ${element.phase_at_stp || 'N/A'}</p>
@@ -1159,7 +1332,101 @@ function applyRules(chunk, nextChunk) {
         }
     }
 
+    /** Handles right-clicking on the canvas to enter planet view */
+    function handleRightClick(e) {
+        e.preventDefault();
+        if (simulationView.mode !== 'space') return; // Already in planet view
+
+        const rect = canvas.getBoundingClientRect();
+        const worldX = ((e.clientX - rect.left) / zoom - panX) / CELL_SIZE;
+        const worldY = ((e.clientY - rect.top) / zoom - panY) / CELL_SIZE;
+
+        for (const body of celestialBodies) {
+            const dx = worldX - body.x;
+            const dy = worldY - body.y;
+            const distanceSq = dx * dx + dy * dy;
+
+            if (distanceSq <= body.radius * body.radius) {
+                console.log('Entering planet view for body:', body);
+                simulationView.mode = 'planet';
+                simulationView.body = body;
+
+                // Show/hide relevant controls
+                returnToSpaceBtn.style.display = 'block';
+                createPlanetBtn.style.display = 'none';
+
+                // Future: Call initPlanetView() here
+                initPlanetView();
+                return; // Exit after finding the first planet
+            }
+        }
+    }
+
     /** Initializes the entire application */
+    function initPlanetView() {
+        console.log("Initializing Planet View for body:", simulationView.body);
+        const body = simulationView.body;
+        if (!body) return;
+
+        // Pause space simulation by stopping the main loop if it's running
+        const wasRunning = isRunning;
+        if (wasRunning) {
+            startPauseBtn.click(); // Simulate a click to pause
+        }
+
+        // Define grid dimensions based on planet's properties
+        const gridWidth = Math.max(100, Math.floor(body.radius * 10));
+        const gridHeight = Math.max(50, Math.floor(body.radius * 5));
+
+        // Create the planet grid
+        planetGrid = Array(gridHeight).fill(null).map(() =>
+            Array(gridWidth).fill(null).map(() => ({ symbol: 'VACUUM', temperature: body.temperature || 25 }))
+        );
+
+        // Get elements from composition and sort by density (descending)
+        const materials = [];
+        for (const symbol in body.composition) {
+            const count = body.composition[symbol];
+            const element = elements[symbol];
+            if (element) {
+                for (let i = 0; i < count; i++) {
+                    materials.push(element);
+                }
+            }
+        }
+        materials.sort((a, b) => (b.density_proxy || 0) - (a.density_proxy || 0));
+
+        // Populate the grid from the bottom up
+        let currentY = gridHeight - 1;
+        let currentX = 0;
+        for (const material of materials) {
+            if (currentY >= 0) {
+                planetGrid[currentY][currentX] = { symbol: material.symbol, temperature: material.temperature || 25 };
+                currentX++;
+                if (currentX >= gridWidth) {
+                    currentX = 0;
+                    currentY--;
+                }
+            }
+        }
+
+        // Resume simulation (now it will run the planet simulation)
+        if (wasRunning) {
+            startPauseBtn.click();
+        }
+    }
+
+    function initSpaceView() {
+        console.log("Returning to Space View...");
+        simulationView.mode = 'space';
+        simulationView.body = null;
+        planetGrid = null;
+
+        // Restore UI
+        returnToSpaceBtn.style.display = 'none';
+        createPlanetBtn.style.display = 'block';
+    }
+
     function init() {
         infoPanel.innerHTML = '<h3>Loading...</h3><p>Loading element data...</p>';
         loadData();
@@ -1200,6 +1467,9 @@ function applyRules(chunk, nextChunk) {
             updateInfoPanel(e);
             if (isMouseDown) paint(e);
         });
+
+        canvas.addEventListener('contextmenu', handleRightClick);
+        returnToSpaceBtn.addEventListener('click', initSpaceView);
         
         createPlanetBtn.addEventListener('click', () => {
             planetModal.style.display = 'block';
