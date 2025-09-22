@@ -341,20 +341,45 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(render);
     }
     
-    /** Populates the dropdown with pure periodic table elements only */
+    /** Populates the dropdown with categorized elements and compounds */
     function populateElementSelector() {
         elementSelector.innerHTML = '';
-        Object.keys(elements)
-            .filter(symbol =>
-                elements[symbol].atomic_number !== undefined
-            )
-            .sort((a, b) => elements[a].atomic_number - elements[b].atomic_number)
-            .forEach(symbol => {
-                const option = document.createElement('option');
-                option.value = symbol;
-                option.textContent = elements[symbol].name || symbol;
-                elementSelector.appendChild(option);
-            });
+
+        // --- Create Option Groups ---
+        const elementGroup = document.createElement('optgroup');
+        elementGroup.label = 'Elements';
+
+        const specialGroup = document.createElement('optgroup');
+        specialGroup.label = 'Special';
+
+        // --- Filter and Sort ---
+        const periodicElements = Object.keys(elements)
+            .filter(symbol => elements[symbol].atomic_number !== undefined)
+            .sort((a, b) => elements[a].atomic_number - elements[b].atomic_number);
+
+        const specialElements = Object.keys(elements)
+            .filter(symbol => elements[symbol].atomic_number === undefined)
+            .sort((a,b) => (elements[a].name || a).localeCompare(elements[b].name || b));
+
+
+        // --- Populate Groups ---
+        periodicElements.forEach(symbol => {
+            const option = document.createElement('option');
+            option.value = symbol;
+            option.textContent = elements[symbol].name || symbol;
+            elementGroup.appendChild(option);
+        });
+
+        specialElements.forEach(symbol => {
+            const option = document.createElement('option');
+            option.value = symbol;
+            option.textContent = elements[symbol].name || symbol;
+            specialGroup.appendChild(option);
+        });
+
+        elementSelector.appendChild(elementGroup);
+        elementSelector.appendChild(specialGroup);
+
         elementSelector.value = currentElement;
     }
 

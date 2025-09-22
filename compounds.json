@@ -7,6 +7,22 @@
         "temperature": -273,
         "density_proxy": 0
     },
+    "HEAT": {
+        "symbol": "HEAT",
+        "name": "Heat Source",
+        "color": "#FF4500",
+        "phase_at_stp": "Solid",
+        "temperature": 1000,
+        "density_proxy": 10
+    },
+    "COLD": {
+        "symbol": "COLD",
+        "name": "Cold Source",
+        "color": "#00BFFF",
+        "phase_at_stp": "Solid",
+        "temperature": -100,
+        "density_proxy": 10
+    },
     "FIRE": {
         "symbol": "FIRE",
         "name": "Fire",
