@@ -1,3 +1,632 @@
+const elementsData = {
+    "H": {
+        "symbol": "H",
+        "atomic_number": 1,
+        "phase_at_stp": "Gas",
+        "valence": 1,
+        "common_oxidation_states": [1, -1],
+        "electronegativity": 2.20,
+        "reactivity_class": "Diatomic Nonmetal",
+        "flammability": true,
+        "solubility": false,
+        "density_proxy": 0.08988,
+        "color": "#FFFFFF"
+    },
+    "He": {
+        "symbol": "He",
+        "atomic_number": 2,
+        "phase_at_stp": "Gas",
+        "valence": 0,
+        "common_oxidation_states": [],
+        "electronegativity": null,
+        "reactivity_class": "Noble Gas",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 0.1786,
+        "color": "#D9FFFF"
+    },
+    "Li": {
+        "symbol": "Li",
+        "atomic_number": 3,
+        "phase_at_stp": "Solid",
+        "valence": 1,
+        "common_oxidation_states": [1],
+        "electronegativity": 0.98,
+        "reactivity_class": "Alkali Metal",
+        "flammability": true,
+        "solubility": true,
+        "density_proxy": 0.534,
+        "color": "#CC80FF"
+    },
+    "Be": {
+        "symbol": "Be",
+        "atomic_number": 4,
+        "phase_at_stp": "Solid",
+        "valence": 2,
+        "common_oxidation_states": [2],
+        "electronegativity": 1.57,
+        "reactivity_class": "Alkaline Earth Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 1.85,
+        "color": "#C2FF00"
+    },
+    "B": {
+        "symbol": "B",
+        "atomic_number": 5,
+        "phase_at_stp": "Solid",
+        "valence": 3,
+        "common_oxidation_states": [3],
+        "electronegativity": 2.04,
+        "reactivity_class": "Metalloid",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 2.34,
+        "color": "#FFB5B5"
+    },
+    "C": {
+        "symbol": "C",
+        "atomic_number": 6,
+        "phase_at_stp": "Solid",
+        "valence": 4,
+        "common_oxidation_states": [4, 2, -4],
+        "electronegativity": 2.55,
+        "reactivity_class": "Polyatomic Nonmetal",
+        "flammability": true,
+        "solubility": false,
+        "density_proxy": 2.267,
+        "color": "#909090"
+    },
+    "N": {
+        "symbol": "N",
+        "atomic_number": 7,
+        "phase_at_stp": "Gas",
+        "valence": 3,
+        "common_oxidation_states": [5, 4, 3, 2, 1, -1, -2, -3],
+        "electronegativity": 3.04,
+        "reactivity_class": "Diatomic Nonmetal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 1.251,
+        "color": "#3050F8"
+    },
+    "O": {
+        "symbol": "O",
+        "atomic_number": 8,
+        "phase_at_stp": "Gas",
+        "valence": 2,
+        "common_oxidation_states": [-2],
+        "electronegativity": 3.44,
+        "reactivity_class": "Diatomic Nonmetal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 1.429,
+        "color": "#FF0D0D"
+    },
+    "F": {
+        "symbol": "F",
+        "atomic_number": 9,
+        "phase_at_stp": "Gas",
+        "valence": 1,
+        "common_oxidation_states": [-1],
+        "electronegativity": 3.98,
+        "reactivity_class": "Halogen",
+        "flammability": false,
+        "solubility": true,
+        "density_proxy": 1.696,
+        "color": "#90E050"
+    },
+    "Ne": {
+        "symbol": "Ne",
+        "atomic_number": 10,
+        "phase_at_stp": "Gas",
+        "valence": 0,
+        "common_oxidation_states": [],
+        "electronegativity": null,
+        "reactivity_class": "Noble Gas",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 0.9002,
+        "color": "#B3E3F5"
+    },
+    "Na": {
+        "symbol": "Na",
+        "atomic_number": 11,
+        "phase_at_stp": "Solid",
+        "valence": 1,
+        "common_oxidation_states": [1],
+        "electronegativity": 0.93,
+        "reactivity_class": "Alkali Metal",
+        "flammability": true,
+        "solubility": true,
+        "density_proxy": 0.971,
+        "color": "#AB5CF2"
+    },
+    "Mg": {
+        "symbol": "Mg",
+        "atomic_number": 12,
+        "phase_at_stp": "Solid",
+        "valence": 2,
+        "common_oxidation_states": [2],
+        "electronegativity": 1.31,
+        "reactivity_class": "Alkaline Earth Metal",
+        "flammability": true,
+        "solubility": false,
+        "density_proxy": 1.738,
+        "color": "#8AFF00"
+    },
+    "Al": {
+        "symbol": "Al",
+        "atomic_number": 13,
+        "phase_at_stp": "Solid",
+        "valence": 3,
+        "common_oxidation_states": [3],
+        "electronegativity": 1.61,
+        "reactivity_class": "Post-transition Metal",
+        "flammability": true,
+        "solubility": false,
+        "density_proxy": 2.698,
+        "color": "#BFA6A6"
+    },
+    "Si": {
+        "symbol": "Si",
+        "atomic_number": 14,
+        "phase_at_stp": "Solid",
+        "valence": 4,
+        "common_oxidation_states": [4, 2, -4],
+        "electronegativity": 1.90,
+        "reactivity_class": "Metalloid",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 2.3296,
+        "color": "#F0C8A0"
+    },
+    "P": {
+        "symbol": "P",
+        "atomic_number": 15,
+        "phase_at_stp": "Solid",
+        "valence": 3,
+        "common_oxidation_states": [5, 3, -3],
+        "electronegativity": 2.19,
+        "reactivity_class": "Polyatomic Nonmetal",
+        "flammability": true,
+        "solubility": false,
+        "density_proxy": 1.82,
+        "color": "#FF8000"
+    },
+    "S": {
+        "symbol": "S",
+        "atomic_number": 16,
+        "phase_at_stp": "Solid",
+        "valence": 2,
+        "common_oxidation_states": [6, 4, 2, -2],
+        "electronegativity": 2.58,
+        "reactivity_class": "Polyatomic Nonmetal",
+        "flammability": true,
+        "solubility": false,
+        "density_proxy": 2.07,
+        "color": "#FFFF30"
+    },
+    "Cl": {
+        "symbol": "Cl",
+        "atomic_number": 17,
+        "phase_at_stp": "Gas",
+        "valence": 1,
+        "common_oxidation_states": [7, 5, 3, 1, -1],
+        "electronegativity": 3.16,
+        "reactivity_class": "Halogen",
+        "flammability": false,
+        "solubility": true,
+        "density_proxy": 3.214,
+        "color": "#1FF01F"
+    },
+    "Ar": {
+        "symbol": "Ar",
+        "atomic_number": 18,
+        "phase_at_stp": "Gas",
+        "valence": 0,
+        "common_oxidation_states": [],
+        "electronegativity": null,
+        "reactivity_class": "Noble Gas",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 1.784,
+        "color": "#80D1E3"
+    },
+    "K": {
+        "symbol": "K",
+        "atomic_number": 19,
+        "phase_at_stp": "Solid",
+        "valence": 1,
+        "common_oxidation_states": [1],
+        "electronegativity": 0.82,
+        "reactivity_class": "Alkali Metal",
+        "flammability": true,
+        "solubility": true,
+        "density_proxy": 0.862,
+        "color": "#8F40D4"
+    },
+    "Ca": {
+        "symbol": "Ca",
+        "atomic_number": 20,
+        "phase_at_stp": "Solid",
+        "valence": 2,
+        "common_oxidation_states": [2],
+        "electronegativity": 1.00,
+        "reactivity_class": "Alkaline Earth Metal",
+        "flammability": true,
+        "solubility": true,
+        "density_proxy": 1.54,
+        "color": "#3DFF00"
+    },
+    "Sc": {
+        "symbol": "Sc",
+        "atomic_number": 21,
+        "phase_at_stp": "Solid",
+        "valence": 3,
+        "common_oxidation_states": [3],
+        "electronegativity": 1.36,
+        "reactivity_class": "Transition Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 2.989,
+        "color": "#E6E6E6"
+    },
+    "Ti": {
+        "symbol": "Ti",
+        "atomic_number": 22,
+        "phase_at_stp": "Solid",
+        "valence": 4,
+        "common_oxidation_states": [4, 3, 2],
+        "electronegativity": 1.54,
+        "reactivity_class": "Transition Metal",
+        "flammability": true,
+        "solubility": false,
+        "density_proxy": 4.54,
+        "color": "#BFC2C7"
+    },
+    "V": {
+        "symbol": "V",
+        "atomic_number": 23,
+        "phase_at_stp": "Solid",
+        "valence": 5,
+        "common_oxidation_states": [5, 4, 3, 2],
+        "electronegativity": 1.63,
+        "reactivity_class": "Transition Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 6.11,
+        "color": "#A6A6AB"
+    },
+    "Cr": {
+        "symbol": "Cr",
+        "atomic_number": 24,
+        "phase_at_stp": "Solid",
+        "valence": 3,
+        "common_oxidation_states": [6, 3, 2],
+        "electronegativity": 1.66,
+        "reactivity_class": "Transition Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 7.15,
+        "color": "#8A99C7"
+    },
+    "Mn": {
+        "symbol": "Mn",
+        "atomic_number": 25,
+        "phase_at_stp": "Solid",
+        "valence": 2,
+        "common_oxidation_states": [7, 4, 3, 2],
+        "electronegativity": 1.55,
+        "reactivity_class": "Transition Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 7.44,
+        "color": "#9C7AC7"
+    },
+    "Fe": {
+        "symbol": "Fe",
+        "atomic_number": 26,
+        "phase_at_stp": "Solid",
+        "valence": 3,
+        "common_oxidation_states": [3, 2],
+        "electronegativity": 1.83,
+        "reactivity_class": "Transition Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 7.874,
+        "color": "#E06633"
+    },
+    "Co": {
+        "symbol": "Co",
+        "atomic_number": 27,
+        "phase_at_stp": "Solid",
+        "valence": 2,
+        "common_oxidation_states": [3, 2],
+        "electronegativity": 1.88,
+        "reactivity_class": "Transition Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 8.86,
+        "color": "#F090A0"
+    },
+    "Ni": {
+        "symbol": "Ni",
+        "atomic_number": 28,
+        "phase_at_stp": "Solid",
+        "valence": 2,
+        "common_oxidation_states": [3, 2],
+        "electronegativity": 1.91,
+        "reactivity_class": "Transition Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 8.908,
+        "color": "#50D050"
+    },
+    "Cu": {
+        "symbol": "Cu",
+        "atomic_number": 29,
+        "phase_at_stp": "Solid",
+        "valence": 2,
+        "common_oxidation_states": [2, 1],
+        "electronegativity": 1.90,
+        "reactivity_class": "Transition Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 8.96,
+        "color": "#C88033",
+        "conductive": true
+    },
+    "Zn": {
+        "symbol": "Zn",
+        "atomic_number": 30,
+        "phase_at_stp": "Solid",
+        "valence": 2,
+        "common_oxidation_states": [2],
+        "electronegativity": 1.65,
+        "reactivity_class": "Transition Metal",
+        "flammability": false,
+        "solubility": false,
+        "density_proxy": 7.134,
+        "color": "#7D80B0"
+    }
+};
+const compoundsData = {
+    "VACUUM": {
+        "symbol": "VACUUM",
+        "name": "Vacuum",
+        "color": "#000000",
+        "phase_at_stp": "Gas",
+        "temperature": -273,
+        "density_proxy": 0
+    },
+    "HEAT": {
+        "symbol": "HEAT",
+        "name": "Heat Source",
+        "color": "#FF4500",
+        "phase_at_stp": "Solid",
+        "temperature": 1000,
+        "density_proxy": 10
+    },
+    "COLD": {
+        "symbol": "COLD",
+        "name": "Cold Source",
+        "color": "#00BFFF",
+        "phase_at_stp": "Solid",
+        "temperature": -100,
+        "density_proxy": 10
+    },
+    "FIRE": {
+        "symbol": "FIRE",
+        "name": "Fire",
+        "color": "#FF4500",
+        "phase_at_stp": "Gas",
+        "lifespan": 15,
+        "temperature": 800,
+        "density_proxy": 0.1
+    },
+    "H2O": {
+        "symbol": "H2O",
+        "name": "Water",
+        "color": "#3498DB",
+        "phase_at_stp": "Liquid",
+        "temperature": 25,
+        "density_proxy": 1.0,
+        "temperature_thresholds": {
+            "freeze": 0,
+            "boil": 100
+        }
+    },
+    "ICE": {
+        "symbol": "ICE",
+        "name": "Ice",
+        "color": "#A9CCE3",
+        "phase_at_stp": "Solid",
+        "temperature": -10,
+        "density_proxy": 0.917
+    },
+    "STEAM": {
+        "symbol": "STEAM",
+        "name": "Steam",
+        "color": "#F2F3F4",
+        "phase_at_stp": "Gas",
+        "temperature": 110,
+        "density_proxy": 0.0006
+    },
+    "LIFE": {
+        "symbol": "LIFE",
+        "name": "Life",
+        "color": "#2ECC71",
+        "phase_at_stp": "Solid",
+        "temperature": 25,
+        "density_proxy": 1.1,
+        "is_life": true,
+        "lifespan": 100
+    },
+    "DEAD": {
+        "symbol": "DEAD",
+        "name": "Dead Matter",
+        "color": "#784212",
+        "phase_at_stp": "Solid",
+        "temperature": 25,
+        "density_proxy": 0.9
+    },
+    "CO2": {
+        "symbol": "CO2",
+        "name": "Carbon Dioxide",
+        "color": "#A0A0A0",
+        "phase_at_stp": "Gas",
+        "temperature": 25,
+        "density_proxy": 1.977
+    },
+    "SO2": {
+        "symbol": "SO2",
+        "name": "Sulfur Dioxide",
+        "color": "#F0E68C",
+        "phase_at_stp": "Gas",
+        "temperature": 25,
+        "density_proxy": 2.6288
+    },
+    "H2SO4": {
+        "symbol": "H2SO4",
+        "name": "Sulfuric Acid",
+        "color": "#FFD700",
+        "phase_at_stp": "Liquid",
+        "temperature": 25,
+        "density_proxy": 1.83
+    },
+    "NACL": {
+        "symbol": "NACL",
+        "name": "Salt",
+        "color": "#FDFEFE",
+        "phase_at_stp": "Solid",
+        "temperature": 25,
+        "density_proxy": 2.16
+    },
+    "CH4": {
+        "symbol": "CH4",
+        "name": "Methane",
+        "color": "#B2FF66",
+        "phase_at_stp": "Gas",
+        "flammability": true,
+        "temperature": 25,
+        "density_proxy": 0.657
+    }
+};
+const rulesData = [
+    {
+        "name": "Water Formation (O + 2H)",
+        "enabled": true,
+        "reactants": { "center": "O", "neighbors": ["H", "H"] },
+        "products": { "center": "H2O", "consumed_neighbors": 2 },
+        "probability": 1.0
+    },
+    {
+        "name": "Salt Formation (Na + Cl)",
+        "enabled": true,
+        "reactants": { "center": "Na", "neighbors": ["Cl"] },
+        "products": { "center": "NACL", "consumed_neighbors": 1 },
+        "probability": 0.2
+    },
+    {
+        "name": "Methane Formation (C + 4H)",
+        "enabled": true,
+        "reactants": { "center": "C", "neighbors": ["H", "H", "H", "H"] },
+        "products": { "center": "CH4", "consumed_neighbors": 4 },
+        "probability": 0.05
+    },
+    {
+        "name": "Combustion (Flammable + O)",
+        "enabled": true,
+        "is_combustion": true,
+        "probability": 0.1
+    },
+    {
+        "name": "CO2 Formation (C + O)",
+        "enabled": true,
+        "reactants": { "center": "C", "neighbors": ["O"] },
+        "products": { "center": "CO2", "consumed_neighbors": 1 },
+        "probability": 0.5
+    },
+    {
+        "name": "SO2 Formation (S + O)",
+        "enabled": true,
+        "reactants": { "center": "S", "neighbors": ["O"] },
+        "products": { "center": "SO2", "consumed_neighbors": 1 },
+        "probability": 0.5
+    },
+    {
+        "name": "Photosynthesis (CO2 + H2O)",
+        "enabled": true,
+        "reactants": { "center": "CO2", "neighbors": ["H2O"] },
+        "products": { "center": "LIFE", "consumed_neighbors": 1 },
+        "probability": 0.1
+    },
+    {
+        "name": "Acid Rain (SO2 + H2O)",
+        "enabled": true,
+        "reactants": { "center": "SO2", "neighbors": ["H2O"] },
+        "products": { "center": "H2SO4", "consumed_neighbors": 1 },
+        "probability": 0.2
+    },
+    {
+        "name": "Salt Dissolution (NACL + H2O)",
+        "enabled": true,
+        "reactants": { "center": "NACL", "neighbors": ["H2O"] },
+        "products": { "center": "H2O", "consumed_neighbors": 1 },
+        "probability": 0.4
+    },
+    {
+        "name": "Neutralization (H2SO4 + Na)",
+        "enabled": true,
+        "reactants": { "center": "H2SO4", "neighbors": ["Na"] },
+        "products": { "center": "NACL", "consumed_neighbors": 1 },
+        "probability": 0.2
+    },
+    {
+        "name": "Rusting (Fe + O)",
+        "enabled": true,
+        "reactants": { "center": "Fe", "neighbors": ["O"] },
+        "products": { "center": "DEAD", "consumed_neighbors": 1 },
+        "probability": 0.05
+    },
+    {
+        "name": "Life Decay (LIFE)",
+        "enabled": true,
+        "reactants": { "center": "LIFE", "neighbors": [] },
+        "products": { "center": "DEAD", "consumed_neighbors": 0 },
+        "probability": 0.005
+    },
+    {
+        "name": "Dead Matter Decomposition (DEAD + O)",
+        "enabled": true,
+        "reactants": { "center": "DEAD", "neighbors": ["O"] },
+        "products": { "center": "CO2", "consumed_neighbors": 1 },
+        "probability": 0.01
+    },
+    {
+        "name": "Steam Condensation (STEAM + COLD)",
+        "enabled": true,
+        "reactants": { "center": "STEAM", "neighbors": ["COLD"] },
+        "products": { "center": "H2O", "consumed_neighbors": 1 },
+        "probability": 1.0
+    },
+    {
+        "name": "Ice Melting (ICE + HEAT)",
+        "enabled": true,
+        "reactants": { "center": "ICE", "neighbors": ["HEAT"] },
+        "products": { "center": "H2O", "consumed_neighbors": 1 },
+        "probability": 1.0
+    },
+    {
+        "name": "Water Freezing (H2O + COLD)",
+        "enabled": true,
+        "reactants": { "center": "H2O", "neighbors": ["COLD"] },
+        "products": { "center": "ICE", "consumed_neighbors": 1 },
+        "probability": 1.0
+    }
+];
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const canvas = document.getElementById('simulationCanvas');
@@ -29,19 +658,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Core Functions ---
 
     /**
-     * Fetches element and rule data from JSON files.
+     * Loads element and rule data from embedded objects.
      */
-    async function loadData() {
+    function loadData() {
         try {
-            const [elementsResponse, compoundsResponse, rulesResponse] = await Promise.all([
-                fetch('elements.json'),
-                fetch('compounds.json'),
-                fetch('rules.json')
-            ]);
-            const elementsData = await elementsResponse.json();
-            const compoundsData = await compoundsResponse.json();
-            rules = await rulesResponse.json();
-
+            rules = rulesData;
             elements = { ...elementsData, ...compoundsData };
 
             populateElementSelector();
@@ -450,8 +1071,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /** Initializes the entire application */
-    async function init() {
-        await loadData();
+    function init() {
+        loadData();
         initializeGrid();
 
         // Event Listeners
